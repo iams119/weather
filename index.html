@@ -1,0 +1,158 @@
+<!-- python -m http.server 8000 구동 -->
+<!-- API KEY 66f62464dec4a29271b61021e3858e76 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>주요 도시 5일 날씨 예보</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 20px;
+    background: #eef6f9;
+    text-align: center;
+  }
+  select, input[type=submit] {
+    font-size: 1rem;
+    padding: 8px 12px;
+    margin: 10px 5px;
+  }
+  .forecast {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .day {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 3px 7px rgba(0,0,0,0.1);
+    margin: 10px;
+    padding: 15px;
+    width: 140px;
+    text-align: center;
+  }
+  .day h3 {
+    margin: 0 0 8px 0;
+  }
+  .day strong {
+    color: #e63946;
+    font-size: 1.2rem;
+  }
+  .humidity {
+    color: #1d3557;
+    font-weight: 600;
+    margin: 6px 0 0 0;
+  }
+  .error {
+    color: red;
+    margin-top: 20px;
+  }
+</style>
+</head>
+
+<body>
+  <h1>주요 도시 5일 날씨 예보</h1>
+
+  <form id="weatherForm">
+    <select id="citySelect" required>
+      <option value="">도시 선택</option>
+      <option value="1835848">Seoul, KR</option>
+      <option value="5128581">New York, US</option>
+      <option value="2643743">London, GB</option>
+      <option value="1850147">Tokyo, JP</option>
+      <option value="2950159">Berlin, DE</option>
+      <option value="2147714">Sydney, AU</option>
+      <option value="1880252">Singapore, SG</option>
+      <option value="3435910">Buenos Aires, AR</option>
+      <option value="3448439">São Paulo, BR</option>
+      <option value="360630">Cairo, EG</option>
+      <option value="3117735">Madrid, ES</option>
+      <option value="2988507">Paris, FR</option>
+      <option value="993800">Johannesburg, ZA</option>
+      <option value="6167865">Toronto, CA</option>
+      <option value="1816670">Beijing, CN</option>
+      <option value="2643123">Manchester, GB</option>
+      <option value="3451190">Rio de Janeiro, BR</option>
+      <option value="2673730">Stockholm, SE</option>
+    </select>
+    <input type="submit" value="검색" />
+  </form>
+
+  <div id="forecastResult" class="forecast"></div>
+
+<script>
+const API_KEY = '66f62464dec4a29271b61021e3858e76';  // OpenWeatherMap API 키 입력
+
+document.getElementById('weatherForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const cityId = document.getElementById('citySelect').value;
+  if (!cityId) {
+    alert('도시를 선택해주세요!');
+    return;
+  }
+  fetchForecast(cityId);
+});
+
+function fetchForecast(cityId) {
+  const url = `https://api.openweathermap.org/data/2.5/forecast?id=${cityId}&appid=${API_KEY}&units=metric&lang=kr`;
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      if (data.cod === "200") {
+        showForecast(data);
+      } else {
+        document.getElementById('forecastResult').innerHTML = `<p class="error">도시 정보를 찾을 수 없습니다.</p>`;
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      document.getElementById('forecastResult').innerHTML = `<p class="error">오류가 발생했습니다.</p>`;
+    });
+}
+
+function showForecast(data){
+  const daily = {};
+  data.list.forEach(item => {
+    const date = item.dt_txt.split(' ')[0];
+    if(!daily[date]) daily[date] = { temps: [], humidities: [], descriptions: [], icons: [] };
+    daily[date].temps.push(item.main.temp);
+    daily[date].humidities.push(item.main.humidity);
+    daily[date].descriptions.push(item.weather[0].description);
+    daily[date].icons.push(item.weather[0].icon);
+  });
+  
+  const days = Object.keys(daily).slice(0,5);
+  let html = '';
+  days.forEach(date => {
+    const day = daily[date];
+    const avgTemp = (day.temps.reduce((a,b) => a+b, 0) / day.temps.length).toFixed(1);
+    const avgHumidity = (day.humidities.reduce((a,b) => a+b, 0) / day.humidities.length).toFixed(0);
+    const desc = mostFrequent(day.descriptions);
+    const icon = mostFrequent(day.icons);
+    const dateObj = new Date(date);
+    const dateStr = `${dateObj.getMonth()+1}/${dateObj.getDate()} (${['일','월','화','수','목','금','토'][dateObj.getDay()]})`;
+    
+    html += `
+      <div class="day">
+        <h3>${dateStr}</h3>
+        <img src="http://openweathermap.org/img/wn/${icon}@2x.png" alt="${desc}">
+        <strong>${avgTemp} ℃</strong>
+        <p class="humidity">습도: ${avgHumidity}%</p>
+        <p>${desc}</p>
+      </div>
+    `;
+  });
+  
+  document.getElementById('forecastResult').innerHTML = html;
+}
+
+function mostFrequent(arr){
+  return arr.sort((a,b) =>
+    arr.filter(v => v===a).length - arr.filter(v => v===b).length
+  ).pop();
+}
+
+</script>
+</body>
+</html>
