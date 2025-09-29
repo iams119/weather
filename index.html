@@ -1,21 +1,26 @@
-<!-- python -m http.server 8000 구동 -->
-<!-- API KEY 66f62464dec4a29271b61021e3858e76 -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
 <title>주요 도시 5일 날씨 예보</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <style>
   body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 20px;
     background: #eef6f9;
-    text-align: center;
   }
+  h1 { text-align: center; }
   select, input[type=submit] {
     font-size: 1rem;
     padding: 8px 12px;
     margin: 10px 5px;
+  }
+  #map {
+    height: 500px;
+    margin-top: 20px;
+    border-radius: 10px;
+    box-shadow: 0 3px 7px rgba(0,0,0,0.2);
   }
   .forecast {
     margin-top: 30px;
@@ -32,27 +37,15 @@
     width: 140px;
     text-align: center;
   }
-  .day h3 {
-    margin: 0 0 8px 0;
-  }
-  .day strong {
-    color: #e63946;
-    font-size: 1.2rem;
-  }
-  .humidity {
-    color: #1d3557;
-    font-weight: 600;
-    margin: 6px 0 0 0;
-  }
-  .error {
-    color: red;
-    margin-top: 20px;
-  }
+  .day h3 { margin: 0 0 8px 0; }
+  .day strong { color: #e63946; font-size: 1.2rem; }
+  .humidity { color: #1d3557; font-weight: 600; margin: 6px 0 0 0; }
+  .error { color: red; margin-top: 20px; }
 </style>
 </head>
 
 <body>
-  <h1>주요 도시 5일 날씨 예보</h1>
+  <h1>주요 도시 5일 날씨 예보 + 지도 시각화</h1>
 
   <form id="weatherForm">
     <select id="citySelect" required>
@@ -80,9 +73,43 @@
   </form>
 
   <div id="forecastResult" class="forecast"></div>
+  <div id="map"></div>
 
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-const API_KEY = '66f62464dec4a29271b61021e3858e76';  // OpenWeatherMap API 키 입력
+const API_KEY = '66f62464dec4a29271b61021e3858e76';  // OpenWeatherMap API 키
+
+// 주요 도시 목록 (id + 좌표)
+const cities = [
+  { id: 1835848, name: "Seoul", lat: 37.5665, lon: 126.9780 },
+  { id: 5128581, name: "New York", lat: 40.7128, lon: -74.0060 },
+  { id: 2643743, name: "London", lat: 51.5074, lon: -0.1278 },
+  { id: 1850147, name: "Tokyo", lat: 35.6895, lon: 139.6917 },
+  { id: 2950159, name: "Berlin", lat: 52.52, lon: 13.405 },
+  { id: 2147714, name: "Sydney", lat: -33.8688, lon: 151.2093 },
+  { id: 1880252, name: "Singapore", lat: 1.3521, lon: 103.8198 },
+  { id: 3435910, name: "Buenos Aires", lat: -34.6037, lon: -58.3816 },
+  { id: 3448439, name: "São Paulo", lat: -23.5505, lon: -46.6333 },
+  { id: 360630, name: "Cairo", lat: 30.0444, lon: 31.2357 },
+  { id: 2988507, name: "Paris", lat: 48.8566, lon: 2.3522 },
+  { id: 6167865, name: "Toronto", lat: 43.6532, lon: -79.3832 }
+];
+
+// 지도 초기화
+const map = L.map('map').setView([20, 0], 2);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 18,
+}).addTo(map);
+
+// 지도 마커 추가
+cities.forEach(city => {
+  const marker = L.marker([city.lat, city.lon]).addTo(map);
+  marker.bindTooltip(city.name);
+
+  marker.on('click', () => {
+    fetchForecast(city.id);
+  });
+});
 
 document.getElementById('weatherForm').addEventListener('submit', e => {
   e.preventDefault();
@@ -101,6 +128,20 @@ function fetchForecast(cityId) {
     .then(data => {
       if (data.cod === "200") {
         showForecast(data);
+        // 지도 중심 이동
+        map.setView([data.city.coord.lat, data.city.coord.lon], 6);
+        // 팝업 표시
+        const icon = data.list[0].weather[0].icon;
+        const desc = data.list[0].weather[0].description;
+        const temp = data.list[0].main.temp.toFixed(1);
+        L.popup()
+          .setLatLng([data.city.coord.lat, data.city.coord.lon])
+          .setContent(`
+            <h3>${data.city.name}</h3>
+            <img src="https://openweathermap.org/img/wn/${icon}.png">
+            <p><strong>${temp} ℃</strong><br>${desc}</p>
+          `)
+          .openOn(map);
       } else {
         document.getElementById('forecastResult').innerHTML = `<p class="error">도시 정보를 찾을 수 없습니다.</p>`;
       }
@@ -136,7 +177,7 @@ function showForecast(data){
     html += `
       <div class="day">
         <h3>${dateStr}</h3>
-        <img src="http://openweathermap.org/img/wn/${icon}@2x.png" alt="${desc}">
+        <img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="${desc}">
         <strong>${avgTemp} ℃</strong>
         <p class="humidity">습도: ${avgHumidity}%</p>
         <p>${desc}</p>
@@ -148,11 +189,10 @@ function showForecast(data){
 }
 
 function mostFrequent(arr){
-  return arr.sort((a,b) =>
-    arr.filter(v => v===a).length - arr.filter(v => v===b).length
-  ).pop();
+  const count = {};
+  arr.forEach(v => count[v] = (count[v] || 0) + 1);
+  return Object.keys(count).reduce((a,b) => count[a] > count[b] ? a : b);
 }
-
 </script>
 </body>
 </html>
