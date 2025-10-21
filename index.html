@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<title>🌦 전 세계 주요 도시 5일 날씨 예보</title>
+<title>🌦 주요 도시 5일 날씨 예보</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <style>
 body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: linear-gradient(to bottom, #e8f7ff, #f7fbff); transition: background 0.5s; }
@@ -27,7 +27,7 @@ select:hover, input[type=submit]:hover, button:hover { background: #dff4ff; }
 </style>
 </head>
 <body>
-<h1 id="title">🌦 전 세계 주요 도시 5일 날씨 예보</h1>
+<h1 id="title">🌦 주요 도시 5일 날씨 예보</h1>
 <div class="controls">
   <form id="weatherForm" style="display:inline;">
     <select id="citySelect" required>
@@ -103,7 +103,7 @@ document.getElementById('weatherForm').addEventListener('submit',e=>{
 
 document.getElementById('langToggle').addEventListener('click',()=>{
   currentLang=currentLang==='kr'?'en':'kr';
-  document.getElementById('title').textContent=currentLang==='kr'?'🌦 전 세계 주요 도시 5일 날씨 예보':'🌦 Global 5-Day Weather Forecast';
+  document.getElementById('title').textContent=currentLang==='kr'?'🌦 주요 도시 5일 날씨 예보':'🌦 Major City 5-Day Weather Forecast';
   fillCitySelect();
   markers.forEach((m,i)=>m.bindTooltip(currentLang==='kr'?cities[i].name_kr:cities[i].name));
 });
@@ -197,4 +197,5 @@ window.addEventListener('click',e=>{ if(e.target.id==='detailModal') e.target.st
 </script>
 </body>
 </html>
+
 
