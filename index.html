@@ -163,7 +163,18 @@ function showForecast(data){
     const dateObj=new Date(date);
     const dayNames=currentLang==='kr'?['일','월','화','수','목','금','토']:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     const dateStr=`${dateObj.getMonth()+1}/${dateObj.getDate()} (${dayNames[dateObj.getDay()]})`;
-    html+=`<div class="day" onclick="showDetails('${date}')"><h3>${dateStr}</h3><img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="${desc}"><strong>${minT}° / ${maxT}°C</strong><p>${desc}</p><p class="humidity">${currentLang==='kr'?'체감':'Feels'}: ${avgF} ℃</p><p class="wind">${currentLang==='kr'?'풍속':'Wind'}: ${avgW} m/s</p><p class="pressure">${currentLang==='kr'?'기압':'Pressure'}: ${avgP} hPa</p><p>${currentLang==='kr'?'습도':'Humidity'}: ${avgH}%</p></div>`;
+
+  html += `<div class="day" onclick="showDetails('${date}')">
+  <h3>${dateStr}</h3>
+  <img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="${desc}"><br>
+  <strong>${minT}° / ${maxT}°C</strong>
+  <p>${desc}</p>
+  <p class="humidity">${currentLang==='kr'?'체감':'Feels'}: ${avgF} ℃</p>
+  <p class="wind">${currentLang==='kr'?'풍속':'Wind'}: ${avgW} m/s</p>
+  <p class="pressure">${currentLang==='kr'?'기압':'Pressure'}: ${avgP} hPa</p>
+  <p>${currentLang==='kr'?'습도':'Humidity'}: ${avgH}%</p>
+</div>`;
+  
   });
   document.getElementById('forecastResult').innerHTML=html;
 }
@@ -186,3 +197,4 @@ window.addEventListener('click',e=>{ if(e.target.id==='detailModal') e.target.st
 </script>
 </body>
 </html>
+
