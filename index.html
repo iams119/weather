@@ -4,7 +4,6 @@
 <meta charset="UTF-8" />
 <title>🌦 전 세계 주요 도시 5일 날씨 예보</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: linear-gradient(to bottom, #e8f7ff, #f7fbff); transition: background 0.5s; }
 h1 { text-align: center; }
@@ -20,7 +19,6 @@ select:hover, input[type=submit]:hover, button:hover { background: #dff4ff; }
 .humidity, .wind, .pressure { font-size: 0.9rem; color: #1d3557; margin: 4px 0; }
 .error { color: red; text-align: center; margin-top: 20px; }
 #loading { text-align: center; font-size: 1.1rem; color: #333; margin-top: 20px; }
-canvas { display: block; margin: 20px auto; max-width: 800px; background: #fff; border-radius: 12px; box-shadow: 0 3px 7px rgba(0,0,0,0.1); padding: 10px; }
 @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 600px) { .day { width: 100%; max-width: 280px; } }
 .modal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
@@ -40,7 +38,6 @@ canvas { display: block; margin: 20px auto; max-width: 800px; background: #fff; 
   <button id="langToggle">English</button>
 </div>
 <div id="loading" style="display:none;">⏳ 데이터를 불러오는 중...</div>
-<canvas id="tempChart"></canvas>
 <div id="forecastResult" class="forecast"></div>
 <div id="map"></div>
 
@@ -54,7 +51,7 @@ canvas { display: block; margin: 20px auto; max-width: 800px; background: #fff; 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 const API_KEY='66f62464dec4a29271b61021e3858e76';
-let currentLang='kr', chartInstance=null, forecastRaw=null;
+let currentLang='kr', forecastRaw=null;
 
 const cities=[
 {id:1835848,name:"Seoul",name_kr:"서울",lat:37.5665,lon:126.9780},
@@ -74,39 +71,114 @@ const cities=[
 {id:1816670,name:"Beijing",name_kr:"베이징",lat:39.9042,lon:116.4074},
 {id:2643123,name:"Manchester",name_kr:"맨체스터",lat:53.4808,lon:-2.2426},
 {id:3451190,name:"Rio de Janeiro",name_kr:"리우데자네이루",lat:-22.9068,lon:-43.1729},
-{id:2673730,name:"Stockholm",name_kr:"스톡홀름",lat:59.3293,lon:18.0686}];
+{id:2673730,name:"Stockholm",name_kr:"스톡홀름",lat:59.3293,lon:18.0686}
+];
 
 const citySelect=document.getElementById('citySelect');
-function fillCitySelect(){ citySelect.innerHTML=`<option value="">${currentLang==='kr'?'도시 선택':'Select City'}</option>`; cities.forEach(c=>{ const opt=document.createElement('option'); opt.value=c.id; opt.textContent=currentLang==='kr'?c.name_kr:c.name; citySelect.appendChild(opt); }); }
+function fillCitySelect(){
+  citySelect.innerHTML=`<option value="">${currentLang==='kr'?'도시 선택':'Select City'}</option>`;
+  cities.forEach(c=>{
+    const opt=document.createElement('option');
+    opt.value=c.id;
+    opt.textContent=currentLang==='kr'?c.name_kr:c.name;
+    citySelect.appendChild(opt);
+  });
+}
 fillCitySelect();
 
 const map=L.map('map').setView([20,0],2);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ maxZoom:18 }).addTo(map);
 const markers=[];
-cities.forEach(city=>{ const marker=L.marker([city.lat,city.lon]).addTo(map); marker.bindTooltip(currentLang==='kr'?city.name_kr:city.name); marker.on('click',()=>fetchForecast(city.id)); markers.push(marker); });
+cities.forEach((city,i)=>{
+  const marker=L.marker([city.lat,city.lon]).addTo(map);
+  marker.bindTooltip(currentLang==='kr'?city.name_kr:city.name);
+  marker.on('click',()=>fetchForecast(city.id));
+  markers.push(marker);
+});
 
-document.getElementById('weatherForm').addEventListener('submit',e=>{ e.preventDefault(); fetchForecast(citySelect.value); });
-document.getElementById('langToggle').addEventListener('click',()=>{ currentLang=currentLang==='kr'?'en':'kr'; document.getElementById('title').textContent=currentLang==='kr'?'🌦 전 세계 주요 도시 5일 날씨 예보':'🌦 Global 5-Day Weather Forecast'; fillCitySelect(); markers.forEach((m,i)=>m.bindTooltip(currentLang==='kr'?cities[i].name_kr:cities[i].name)); if(chartInstance) chartInstance.destroy(); });
+document.getElementById('weatherForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  fetchForecast(citySelect.value);
+});
 
-function fetchForecast(cityId){ if(!cityId) return alert(currentLang==='kr'?'도시를 선택해주세요!':'Please select a city!'); const loading=document.getElementById('loading'); loading.style.display='block'; fetch(`https://api.openweathermap.org/data/2.5/forecast?id=${cityId}&appid=${API_KEY}&units=metric&lang=${currentLang}`).then(res=>res.json()).then(data=>{ loading.style.display='none'; if(data.cod==='200'){ forecastRaw=data; showForecast(data); drawChart(data); map.setView([data.city.coord.lat,data.city.coord.lon],7); } else document.getElementById('forecastResult').innerHTML=`<p class="error">${currentLang==='kr'?'도시 정보를 찾을 수 없습니다.':'City data not found.'}</p>` }).catch(()=>{ loading.style.display='none'; document.getElementById('forecastResult').innerHTML=`<p class="error">${currentLang==='kr'?'오류가 발생했습니다.':'An error occurred.'}</p>`; }); }
+document.getElementById('langToggle').addEventListener('click',()=>{
+  currentLang=currentLang==='kr'?'en':'kr';
+  document.getElementById('title').textContent=currentLang==='kr'?'🌦 전 세계 주요 도시 5일 날씨 예보':'🌦 Global 5-Day Weather Forecast';
+  fillCitySelect();
+  markers.forEach((m,i)=>m.bindTooltip(currentLang==='kr'?cities[i].name_kr:cities[i].name));
+});
+
+function fetchForecast(cityId){
+  if(!cityId) return alert(currentLang==='kr'?'도시를 선택해주세요!':'Please select a city!');
+  const loading=document.getElementById('loading');
+  loading.style.display='block';
+  fetch(`https://api.openweathermap.org/data/2.5/forecast?id=${cityId}&appid=${API_KEY}&units=metric&lang=${currentLang}`)
+    .then(res=>res.json())
+    .then(data=>{
+      loading.style.display='none';
+      if(data.cod==='200'){
+        forecastRaw=data;
+        showForecast(data);
+        map.setView([data.city.coord.lat,data.city.coord.lon],7);
+      }else{
+        document.getElementById('forecastResult').innerHTML=`<p class="error">${currentLang==='kr'?'도시 정보를 찾을 수 없습니다.':'City data not found.'}</p>`;
+      }
+    })
+    .catch(()=>{
+      loading.style.display='none';
+      document.getElementById('forecastResult').innerHTML=`<p class="error">${currentLang==='kr'?'오류가 발생했습니다.':'An error occurred.'}</p>`;
+    });
+}
 
 function mostFrequent(arr){ const count={}; arr.forEach(v=>count[v]=(count[v]||0)+1); return Object.keys(count).reduce((a,b)=>count[a]>count[b]?a:b); }
 
 function showForecast(data){
-const daily={}; data.list.forEach(item=>{ const date=item.dt_txt.split(' ')[0]; if(!daily[date]) daily[date]={ temps:[], feels:[], humid:[], wind:[], press:[], desc:[], icon:[], details:[] }; daily[date].temps.push(item.main.temp); daily[date].feels.push(item.main.feels_like); daily[date].humid.push(item.main.humidity); daily[date].wind.push(item.wind.speed); daily[date].press.push(item.main.pressure); daily[date].desc.push(item.weather[0].description); daily[date].icon.push(item.weather[0].icon); daily[date].details.push(item); });
-const days=Object.keys(daily).slice(0,5); let html='';
-days.forEach(date=>{ const d=daily[date],avg=a=>a.reduce((x,y)=>x+y,0)/a.length; const maxT=Math.max(...d.temps).toFixed(1), minT=Math.min(...d.temps).toFixed(1); const avgF=avg(d.feels).toFixed(1), avgH=avg(d.humid).toFixed(0), avgW=avg(d.wind).toFixed(1), avgP=avg(d.press).toFixed(0); const desc=mostFrequent(d.desc), icon=mostFrequent(d.icon); const dateObj=new Date(date); const dayNames=currentLang==='kr'?['일','월','화','수','목','금','토']:['Sun','Mon','Tue','Wed','Thu','Fri','Sat']; const dateStr=`${dateObj.getMonth()+1}/${dateObj.getDate()} (${dayNames[dateObj.getDay()]})`; html+=`<div class="day" onclick="showDetails('${date}')"><h3>${dateStr}</h3><img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="${desc}"><strong>${minT}° / ${maxT}°C</strong><p>${desc}</p><p class="humidity">${currentLang==='kr'?'체감':'Feels'}: ${avgF} ℃</p><p class="wind">${currentLang==='kr'?'풍속':'Wind'}: ${avgW} m/s</p><p class="pressure">${currentLang==='kr'?'기압':'Pressure'}: ${avgP} hPa</p><p>${currentLang==='kr'?'습도':'Humidity'}: ${avgH}%</p></div>`; });
-document.getElementById('forecastResult').innerHTML=html;
+  const daily={};
+  data.list.forEach(item=>{
+    const date=item.dt_txt.split(' ')[0];
+    if(!daily[date]) daily[date]={ temps:[], feels:[], humid:[], wind:[], press:[], desc:[], icon:[], details:[] };
+    daily[date].temps.push(item.main.temp);
+    daily[date].feels.push(item.main.feels_like);
+    daily[date].humid.push(item.main.humidity);
+    daily[date].wind.push(item.wind.speed);
+    daily[date].press.push(item.main.pressure);
+    daily[date].desc.push(item.weather[0].description);
+    daily[date].icon.push(item.weather[0].icon);
+    daily[date].details.push(item);
+  });
+
+  const days=Object.keys(daily).slice(0,5);
+  let html='';
+  days.forEach(date=>{
+    const d=daily[date];
+    const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
+    const maxT=Math.max(...d.temps).toFixed(1);
+    const minT=Math.min(...d.temps).toFixed(1);
+    const avgF=avg(d.feels).toFixed(1);
+    const avgH=avg(d.humid).toFixed(0);
+    const avgW=avg(d.wind).toFixed(1);
+    const avgP=avg(d.press).toFixed(0);
+    const desc=mostFrequent(d.desc);
+    const icon=mostFrequent(d.icon);
+    const dateObj=new Date(date);
+    const dayNames=currentLang==='kr'?['일','월','화','수','목','금','토']:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const dateStr=`${dateObj.getMonth()+1}/${dateObj.getDate()} (${dayNames[dateObj.getDay()]})`;
+    html+=`<div class="day" onclick="showDetails('${date}')"><h3>${dateStr}</h3><img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="${desc}"><strong>${minT}° / ${maxT}°C</strong><p>${desc}</p><p class="humidity">${currentLang==='kr'?'체감':'Feels'}: ${avgF} ℃</p><p class="wind">${currentLang==='kr'?'풍속':'Wind'}: ${avgW} m/s</p><p class="pressure">${currentLang==='kr'?'기압':'Pressure'}: ${avgP} hPa</p><p>${currentLang==='kr'?'습도':'Humidity'}: ${avgH}%</p></div>`;
+  });
+  document.getElementById('forecastResult').innerHTML=html;
 }
 
-function drawChart(data){ const daily={}; data.list.forEach(item=>{ const date=item.dt_txt.split(' ')[0]; if(!daily[date]) daily[date]={temps:[]}; daily[date].temps.push(item.main.temp); }); const days=Object.keys(daily).slice(0,5), maxTemps=days.map(d=>Math.max(...daily[d].temps)), minTemps=days.map(d=>Math.min(...daily[d].temps)); const ctx=document.getElementById('tempChart'); if(chartInstance) chartInstance.destroy(); chartInstance=new Chart(ctx,{ type:'line', data:{ labels:days, datasets:[{ label: currentLang==='kr'?'최고기온':'Max Temp', data:maxTemps, borderColor:'red', fill:false }, { label: currentLang==='kr'?'최저기온':'Min Temp', data:minTemps, borderColor:'blue', fill:false }] }, options:{ responsive:true, plugins:{legend:{position:'top'}}, scales:{y:{beginAtZero:false}} } }); }
-
 function showDetails(date){
-const modal=document.getElementById('detailModal'), body=document.getElementById('modalBody');
-const dayData=forecastRaw.list.filter(i=>i.dt_txt.startsWith(date));
-let html=`<h2>${date}</h2><table style="width:100%;text-align:center;"><tr><th>${currentLang==='kr'?'시간':'Time'}</th><th>${currentLang==='kr'?'기온':'Temp'}</th><th>${currentLang==='kr'?'체감':'Feels'}</th><th>${currentLang==='kr'?'습도':'Humidity'}</th><th>${currentLang==='kr'?'풍속':'Wind'}</th><th>${currentLang==='kr'?'기압':'Pressure'}</th></tr>`;
-dayData.forEach(item=>{ const t=item.dt_txt.split(' ')[1].slice(0,5); html+=`<tr><td>${t}</td><td>${item.main.temp}°C</td><td>${item.main.feels_like}°C</td><td>${item.main.humidity}%</td><td>${item.wind.speed} m/s</td><td>${item.main.pressure} hPa</td></tr>`; });
-html+='</table>'; body.innerHTML=html; modal.style.display='flex';
+  const modal=document.getElementById('detailModal'), body=document.getElementById('modalBody');
+  const dayData=forecastRaw.list.filter(i=>i.dt_txt.startsWith(date));
+  let html=`<h2>${date}</h2><table style="width:100%;text-align:center;"><tr><th>${currentLang==='kr'?'시간':'Time'}</th><th>${currentLang==='kr'?'기온':'Temp'}</th><th>${currentLang==='kr'?'체감':'Feels'}</th><th>${currentLang==='kr'?'습도':'Humidity'}</th><th>${currentLang==='kr'?'풍속':'Wind'}</th><th>${currentLang==='kr'?'기압':'Pressure'}</th></tr>`;
+  dayData.forEach(item=>{
+    const t=item.dt_txt.split(' ')[1].slice(0,5);
+    html+=`<tr><td>${t}</td><td>${item.main.temp}°C</td><td>${item.main.feels_like}°C</td><td>${item.main.humidity}%</td><td>${item.wind.speed} m/s</td><td>${item.main.pressure} hPa</td></tr>`;
+  });
+  html+='</table>';
+  body.innerHTML=html;
+  modal.style.display='flex';
 }
 
 document.querySelector('.modal-close').addEventListener('click',()=>{ document.getElementById('detailModal').style.display='none'; });
