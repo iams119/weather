@@ -2,126 +2,67 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<title>🌦 주요 도시 5일 날씨 예보</title>
+<title>🌦 전 세계 주요 도시 5일 날씨 예보</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <style>
   body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 20px;
-    background: #eef6f9;
-    transition: background 0.3s;
+    background: linear-gradient(to bottom, #e8f7ff, #f7fbff);
+    transition: background 0.5s;
   }
   h1 { text-align: center; }
-  .controls {
-    text-align: center;
-    margin-bottom: 10px;
-  }
+  .controls { text-align: center; margin-bottom: 10px; }
   select, input[type=submit], button {
-    font-size: 1rem;
-    padding: 8px 12px;
-    margin: 10px 5px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    background: white;
-    cursor: pointer;
-    transition: background 0.2s;
+    font-size: 1rem; padding: 8px 12px; margin: 10px 5px;
+    border-radius: 8px; border: 1px solid #ccc; background: white;
+    cursor: pointer; transition: background 0.2s;
   }
-  select:hover, input[type=submit]:hover, button:hover {
-    background: #dff4ff;
-  }
+  select:hover, input[type=submit]:hover, button:hover { background: #dff4ff; }
   #map {
-    height: 500px;
-    margin-top: 20px;
-    border-radius: 10px;
+    height: 480px; margin-top: 20px; border-radius: 10px;
     box-shadow: 0 3px 7px rgba(0,0,0,0.2);
   }
   .forecast {
-    margin-top: 30px;
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
+    margin-top: 25px; display: flex; justify-content: center; flex-wrap: wrap;
   }
   .day {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 3px 7px rgba(0,0,0,0.1);
-    margin: 10px;
-    padding: 15px;
-    width: 140px;
-    text-align: center;
-    opacity: 0;
-    transform: translateY(20px);
-    animation: fadeInUp 0.5s forwards;
+    background: white; border-radius: 12px; box-shadow: 0 3px 7px rgba(0,0,0,0.1);
+    margin: 10px; padding: 15px; width: 200px; text-align: center;
+    opacity: 0; transform: translateY(20px); animation: fadeInUp 0.6s forwards;
   }
-  .day:nth-child(even) { animation-delay: 0.2s; }
-  .day h3 { margin: 0 0 8px 0; }
+  .day h3 { margin: 0 0 6px 0; }
   .day strong { color: #e63946; font-size: 1.2rem; }
-  .humidity { color: #1d3557; font-weight: 600; margin: 6px 0 0 0; }
+  .humidity, .wind, .pressure { font-size: 0.9rem; color: #1d3557; margin: 4px 0; }
   .error { color: red; text-align: center; margin-top: 20px; }
-
-  #loading {
-    text-align: center;
-    font-size: 1.1rem;
-    color: #333;
-    margin-top: 20px;
-  }
-
-  @keyframes fadeInUp {
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
+  #loading { text-align: center; font-size: 1.1rem; color: #333; margin-top: 20px; }
+  @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
   @media (max-width: 600px) {
-    .day {
-      width: 100%;
-      max-width: 300px;
-    }
+    .day { width: 100%; max-width: 280px; }
   }
 </style>
 </head>
 
 <body>
-  <h1 id="title">🌦 주요 도시 5일 날씨 예보</h1>
-
+  <h1 id="title">🌦 전 세계 주요 도시 5일 날씨 예보</h1>
   <div class="controls">
     <form id="weatherForm" style="display:inline;">
       <select id="citySelect" required>
         <option value="">도시 선택</option>
-      <option value="1835848">Seoul, KR</option>
-      <option value="5128581">New York, US</option>
-      <option value="2643743">London, GB</option>
-      <option value="1850147">Tokyo, JP</option>
-      <option value="2950159">Berlin, DE</option>
-      <option value="2147714">Sydney, AU</option>
-      <option value="1880252">Singapore, SG</option>
-      <option value="3435910">Buenos Aires, AR</option>
-      <option value="3448439">São Paulo, BR</option>
-      <option value="360630">Cairo, EG</option>
-      <option value="3117735">Madrid, ES</option>
-      <option value="2988507">Paris, FR</option>
-      <option value="993800">Johannesburg, ZA</option>
-      <option value="6167865">Toronto, CA</option>
-      <option value="1816670">Beijing, CN</option>
-      <option value="2643123">Manchester, GB</option>
-      <option value="3451190">Rio de Janeiro, BR</option>
-      <option value="2673730">Stockholm, SE</option>
-
       </select>
       <input type="submit" value="검색" />
     </form>
     <button id="langToggle">English</button>
   </div>
 
-  <div id="loading" style="display:none;">⏳ 날씨 데이터를 불러오는 중...</div>
+  <div id="loading" style="display:none;">⏳ 데이터를 불러오는 중...</div>
   <div id="forecastResult" class="forecast"></div>
   <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 const API_KEY = '66f62464dec4a29271b61021e3858e76';
-let currentLang = 'kr'; // 기본 한국어
+let currentLang = 'kr';
 
 const cities = [
   { id: 1835848, name: "Seoul", lat: 37.5665, lon: 126.9780 },
@@ -142,14 +83,21 @@ const cities = [
   { id: 2643123, name: "Manchester", lat: 53.4808, lon: -2.2426 },
   { id: 3451190, name: "Rio de Janeiro", lat: -22.9068, lon: -43.1729 },
   { id: 2673730, name: "Stockholm", lat: 59.3293, lon: 18.0686 }
-
 ];
+
+// 도시 목록 select 채우기
+const citySelect = document.getElementById('citySelect');
+cities.forEach(c => {
+  const opt = document.createElement('option');
+  opt.value = c.id;
+  opt.textContent = `${c.name}`;
+  citySelect.appendChild(opt);
+});
 
 // 지도 초기화
 const map = L.map('map').setView([20, 0], 2);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
 
-// 마커 표시
 cities.forEach(city => {
   const marker = L.marker([city.lat, city.lon]).addTo(map);
   marker.bindTooltip(city.name);
@@ -158,7 +106,7 @@ cities.forEach(city => {
 
 document.getElementById('weatherForm').addEventListener('submit', e => {
   e.preventDefault();
-  const cityId = document.getElementById('citySelect').value;
+  const cityId = citySelect.value;
   if (!cityId) return alert(currentLang === 'kr' ? '도시를 선택해주세요!' : 'Please select a city!');
   fetchForecast(cityId);
 });
@@ -167,8 +115,8 @@ document.getElementById('langToggle').addEventListener('click', () => {
   currentLang = currentLang === 'kr' ? 'en' : 'kr';
   document.getElementById('langToggle').textContent = currentLang === 'kr' ? 'English' : '한국어';
   document.getElementById('title').textContent = currentLang === 'kr'
-    ? '🌦 주요 도시 5일 날씨 예보'
-    : '🌦 5-Day Weather Forecast for Major Cities';
+    ? '🌦 전 세계 주요 도시 5일 날씨 예보'
+    : '🌦 Global 5-Day Weather Forecast';
 });
 
 function fetchForecast(cityId) {
@@ -177,76 +125,72 @@ function fetchForecast(cityId) {
   result.innerHTML = '';
   loading.style.display = 'block';
 
-  const url = `https://api.openweathermap.org/data/2.5/forecast?id=${cityId}&appid=${API_KEY}&units=metric&lang=${currentLang}`;
-  fetch(url)
+  fetch(`https://api.openweathermap.org/data/2.5/forecast?id=${cityId}&appid=${API_KEY}&units=metric&lang=${currentLang}`)
     .then(res => res.json())
     .then(data => {
       loading.style.display = 'none';
       if (data.cod === "200") {
         showForecast(data);
-        map.setView([data.city.coord.lat, data.city.coord.lon], 6);
-        const icon = data.list[0].weather[0].icon;
-        const desc = data.list[0].weather[0].description;
-        const temp = data.list[0].main.temp.toFixed(1);
-        L.popup()
-          .setLatLng([data.city.coord.lat, data.city.coord.lon])
-          .setContent(`
-            <h3>${data.city.name}</h3>
-            <img src="https://openweathermap.org/img/wn/${icon}.png">
-            <p><strong>${temp} ℃</strong><br>${desc}</p>
-          `)
-          .openOn(map);
+        map.setView([data.city.coord.lat, data.city.coord.lon], 7);
       } else {
         result.innerHTML = `<p class="error">${currentLang === 'kr' ? '도시 정보를 찾을 수 없습니다.' : 'City data not found.'}</p>`;
       }
     })
-    .catch(err => {
-      console.error(err);
+    .catch(() => {
       loading.style.display = 'none';
       result.innerHTML = `<p class="error">${currentLang === 'kr' ? '오류가 발생했습니다.' : 'An error occurred.'}</p>`;
     });
 }
 
-function showForecast(data){
+function showForecast(data) {
   const daily = {};
   data.list.forEach(item => {
     const date = item.dt_txt.split(' ')[0];
-    if(!daily[date]) daily[date] = { temps: [], humidities: [], descriptions: [], icons: [] };
+    if(!daily[date]) daily[date] = { temps: [], feels: [], humid: [], wind: [], press: [], desc: [], icon: [] };
     daily[date].temps.push(item.main.temp);
-    daily[date].humidities.push(item.main.humidity);
-    daily[date].descriptions.push(item.weather[0].description);
-    daily[date].icons.push(item.weather[0].icon);
+    daily[date].feels.push(item.main.feels_like);
+    daily[date].humid.push(item.main.humidity);
+    daily[date].wind.push(item.wind.speed);
+    daily[date].press.push(item.main.pressure);
+    daily[date].desc.push(item.weather[0].description);
+    daily[date].icon.push(item.weather[0].icon);
   });
-  
+
   const days = Object.keys(daily).slice(0,5);
   let html = '';
   days.forEach(date => {
-    const day = daily[date];
-    const avgTemp = (day.temps.reduce((a,b) => a+b, 0) / day.temps.length).toFixed(1);
-    const avgHumidity = (day.humidities.reduce((a,b) => a+b, 0) / day.humidities.length).toFixed(0);
-    const desc = mostFrequent(day.descriptions);
-    const icon = mostFrequent(day.icons);
+    const d = daily[date];
+    const avg = arr => (arr.reduce((a,b)=>a+b,0)/arr.length);
+    const maxT = Math.max(...d.temps).toFixed(1);
+    const minT = Math.min(...d.temps).toFixed(1);
+    const avgH = avg(d.humid).toFixed(0);
+    const avgW = avg(d.wind).toFixed(1);
+    const avgP = avg(d.press).toFixed(0);
+    const avgF = avg(d.feels).toFixed(1);
+    const desc = mostFrequent(d.desc);
+    const icon = mostFrequent(d.icon);
     const dateObj = new Date(date);
     const dayNames = currentLang === 'kr' ? ['일','월','화','수','목','금','토'] : ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     const dateStr = `${dateObj.getMonth()+1}/${dateObj.getDate()} (${dayNames[dateObj.getDay()]})`;
-    
     html += `
       <div class="day">
         <h3>${dateStr}</h3>
         <img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="${desc}">
-        <strong>${avgTemp} ℃</strong>
-        <p class="humidity">${currentLang === 'kr' ? '습도' : 'Humidity'}: ${avgHumidity}%</p>
+        <strong>${minT}° / ${maxT}°C</strong>
         <p>${desc}</p>
-      </div>
-    `;
+        <p class="humidity">${currentLang === 'kr' ? '체감' : 'Feels'}: ${avgF} ℃</p>
+        <p class="wind">${currentLang === 'kr' ? '풍속' : 'Wind'}: ${avgW} m/s</p>
+        <p class="pressure">${currentLang === 'kr' ? '기압' : 'Pressure'}: ${avgP} hPa</p>
+        <p>${currentLang === 'kr' ? '습도' : 'Humidity'}: ${avgH}%</p>
+      </div>`;
   });
   document.getElementById('forecastResult').innerHTML = html;
 }
 
-function mostFrequent(arr){
+function mostFrequent(arr) {
   const count = {};
   arr.forEach(v => count[v] = (count[v] || 0) + 1);
-  return Object.keys(count).reduce((a,b) => count[a] > count[b] ? a : b);
+  return Object.keys(count).reduce((a,b)=>count[a]>count[b]?a:b);
 }
 </script>
 </body>
