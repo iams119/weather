@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>투자 자산 현황 (합계 포함)</title>
     <style>
-        /* 기본적인 표 스타일 */
+        /* (스타일 시트 내용은 변경 없음) */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -94,14 +94,14 @@
                 <th rowspan="2">평가금액</th>
                 <th rowspan="2">현재가</th>
                 <th rowspan="2">전체 주식수</th> 
-                <th colspan="7">K </th>
-                <th colspan="4">H </th>
+                <th colspan="15">계좌별 주식수 / 예수금</th> 
             </tr>
             <tr>
                 <th>IRP(퇴직금1)</th>
                 <th>연저(퇴직금2)</th>
                 <th>IRP(개인)</th>
-                <th>연저(개인)세공</th> <th>연저(개인)비세공</th>
+                <th>연저(개인)세공</th> 
+                <th>연저(개인)비세공</th>
                 <th>ISA</th>
                 <th>일반계좌</th>
                 <th>KRX금</th>
@@ -407,7 +407,8 @@
             <tr class="grand-total-row" data-row-key="Total">
                 <td class="text-left">합계 (총 평가 자산)</td>
                 <td class="fixed-data" data-col="합계금액">0</td>
-                <td class="text-center fixed-data" colspan="14"></td> </tr>
+                <td class="text-center fixed-data" colspan="15"></td> 
+            </tr>
 
         </tbody>
     </table>
@@ -415,7 +416,7 @@
     <script>
         const API_ENDPOINT = 'YOUR_DEPLOYED_SERVERLESS_FUNCTION_URL/api/prices'; 
         const LOCAL_STORAGE_KEY = 'assetData';
-        const VOO_PRICE_KRW = 680000; // VOO 추정 현재가 (USD 변동에 따라 수동 업데이트 필요)
+        const VOO_PRICE_KRW = 680000; 
 
         // --- 데이터 저장 및 로드 함수 ---
         
