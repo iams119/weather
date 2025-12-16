@@ -5,7 +5,7 @@
 <title>🌦 주요 도시 5일 날씨 예보</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <style>
-/* 기존 CSS 스타일 유지 */
+/* ... (기존 CSS 스타일 유지) ... */
 body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: linear-gradient(to bottom, #e8f7ff, #f7fbff); transition: background 0.5s; }
 h1 { text-align: center; }
 .controls { text-align: center; margin-bottom: 10px; }
@@ -102,10 +102,13 @@ select:hover, input[type=submit]:hover, button:hover { background: #dff4ff; }
 const API_KEY='66f62464dec4a29271b61021e3858e76';
 let currentLang='kr', forecastRaw=null;
 
-// ✨ 초기 비밀번호 설정 (코드는 그대로 유지)
-const correctPassword = '090591'; 
+// ✨ 평문 비밀번호 대신, SHA-256 해시 값 저장
+// 원본 비밀번호: '090591'
+// SHA-256 해시 값 (소문자): c0a216447d25642d911b306b43d3b664d6a742878c7722956f1400e99b054a8e
+const CORRECT_HASH = 'c0a216447d25642d911b306b43d3b664d6a742878c7722956f1400e99b054a8e'; 
 
 const cities=[
+// ... (도시 데이터 유지) ...
 {id:1835848,name:"Seoul",name_kr:"서울",lat:37.5665,lon:126.9780},
 {id:5128581,name:"New York",name_kr:"뉴욕",lat:40.7128,lon:-74.0060},
 {id:2643743,name:"London",name_kr:"런던",lat:51.5074,lon:-0.1278},
@@ -247,18 +250,36 @@ function showDetails(date){
 document.querySelector('.modal-close').addEventListener('click',()=>{ document.getElementById('detailModal').style.display='none'; });
 window.addEventListener('click',e=>{ if(e.target.id==='detailModal') e.target.style.display='none'; });
 
-// 🔑 로그인 로직 🔑
+// 🔑 새로운 해싱 로직 🔑
+
+// ArrayBuffer를 16진수 문자열로 변환하는 헬퍼 함수
+function bufferToHex(buffer) {
+    return Array.prototype.map.call(new Uint8Array(buffer), x => (('00' + x.toString(16))).slice(-2)).join('');
+}
+
+// SHA-256 해시 함수 (비동기)
+async function sha256(str) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(str);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    return bufferToHex(hashBuffer);
+}
+
 const loginScreen = document.getElementById('loginScreen');
 const passwordInput = document.getElementById('passwordInput');
 const loginButton = document.getElementById('loginButton');
 const loginError = document.getElementById('loginError');
 
-function checkLogin(e) {
+// 비동기 로그인 확인 함수로 변경
+async function checkLogin(e) {
     if (e) e.preventDefault();
     const enteredPassword = passwordInput.value;
     
-    // 이 부분이 비밀번호 일치 여부를 확인하는 핵심 로직입니다.
-    if (enteredPassword === correctPassword) {
+    // 1. 입력된 비밀번호를 SHA-256으로 해시
+    const enteredHash = await sha256(enteredPassword);
+    
+    // 2. 해시 값을 미리 저장된 해시 값과 비교
+    if (enteredHash === CORRECT_HASH) {
         // 비밀번호 일치: 로그인 화면 숨기기
         loginScreen.style.display = 'none';
         loginError.style.display = 'none';
