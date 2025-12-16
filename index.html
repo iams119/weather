@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>투자 자산 현황 (자동 계산 및 영구 저장)</title>
+    <title>투자 자산 현황 </title>
     <style>
         /* 기본적인 표 스타일 */
         table {
@@ -59,18 +59,31 @@
             background-color: #e3f2fd; /* 연한 파란색으로 자동 계산 값임을 표시 */
             color: #d84315; /* 주황색 계열로 텍스트 강조 */
         }
+        #calculateAndSaveBtn {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
 
     <h1>투자 자산 현황</h1>
-    <p>계좌별 주식수와 예수금/평가총액을 입력하세요. **평가금액은 현재가 x 전체 주식수로 자동 계산됩니다.** (업데이트 시간: <span id="lastUpdated">N/A</span>)</p>
+    <p>계좌별 주식수와 예수금/평가총액을 입력하세요. **계산 및 저장 버튼을 눌러야 전체 주식수와 평가금액이 업데이트됩니다.** (현재가 업데이트 시간: <span id="lastUpdated">N/A</span>)</p>
+
+    <button id="calculateAndSaveBtn">계산 및 저장</button>
 
     <table id="assetTable">
         <thead>
             <tr>
                 <th rowspan="2">상품</th>
-                <th rowspan="2">평가금액</th> <th rowspan="2">현재가</th>
+                <th rowspan="2">평가금액</th>
+                <th rowspan="2">현재가</th>
                 <th rowspan="2">전체 주식수</th> 
                 <th colspan="7">K (개인연금)</th>
                 <th colspan="4">H (IRP/ISA/일반)</th>
@@ -94,7 +107,8 @@
             
             <tr data-ticker="360200" data-row-key="TIGER_SP500"> 
                 <td class="text-left">TIGER 미국S&P500</td>
-                <td class="calculated-value fixed-data" data-col="평가금액">0</td> <td class="current-price fixed-data" data-ticker-price>N/A</td> 
+                <td class="calculated-value fixed-data" data-col="평가금액">0</td>
+                <td class="current-price fixed-data" data-ticker-price>N/A</td> 
                 <td class="total-shares fixed-data" data-col="전체 주식수">0</td> 
                 <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금/개인)"></td>
                 <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
@@ -133,92 +147,4 @@
                 <td class="current-price fixed-data" data-ticker-price>N/A</td>
                 <td class="total-shares fixed-data" data-col="전체 주식수">0</td>
                 <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금/개인)"></td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(개인+퇴직금)"></td>
-                <td><input type="number" class="data-input share-input" data-col="구연금저축"></td>
-                <td><input type="number" class="data-input share-input" data-col="연금저축(세금)"></td>
-                <td><input type="number" class="data-input share-input" data-col="연금저축(ISA)"></td>
-                <td><input type="number" class="data-input share-input" data-col="일반계좌"></td>
-                <td><input type="number" class="data-input share-input" data-col="KKB저금"></td>
-                <td><input type="number" class="data-input share-input" data-col="금융원"></td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(개인)_H"></td>
-                <td><input type="number" class="data-input share-input" data-col="ISA_H"></td>
-                <td><input type="number" class="data-input share-input" data-col="일반_H"></td>
-            </tr>
-            <tr data-ticker="474020" data-row-key="1Q_SP500_MIX">
-                <td class="text-left">1Q 미국S&P500미국채혼합50액티브</td>
-                <td class="calculated-value fixed-data" data-col="평가금액">0</td>
-                <td class="current-price fixed-data" data-ticker-price>N/A</td>
-                <td class="total-shares fixed-data" data-col="전체 주식수">0</td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금/개인)"></td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(개인+퇴직금)"></td>
-                <td><input type="number" class="data-input share-input" data-col="구연금저축"></td>
-                <td><input type="number" class="data-input share-input" data-col="연금저축(세금)"></td>
-                <td><input type="number" class="data-input share-input" data-col="연금저축(ISA)"></td>
-                <td><input type="number" class="data-input share-input" data-col="일반계좌"></td>
-                <td><input type="number" class="data-input share-input" data-col="KKB저금"></td>
-                <td><input type="number" class="data-input share-input" data-col="금융원"></td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(개인)_H"></td>
-                <td><input type="number" class="data-input share-input" data-col="ISA_H"></td>
-                <td><input type="number" class="data-input share-input" data-col="일반_H"></td>
-            </tr>
-            <tr data-ticker="474010" data-row-key="1Q_NASDAQ100_MIX">
-                <td class="text-left">1Q 미국나스닥100미국채혼합50액티브</td>
-                <td class="calculated-value fixed-data" data-col="평가금액">0</td>
-                <td class="current-price fixed-data" data-ticker-price>N/A</td>
-                <td class="total-shares fixed-data" data-col="전체 주식수">0</td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금/개인)"></td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(개인+퇴직금)"></td>
-                <td><input type="number" class="data-input share-input" data-col="구연금저축"></td>
-                <td><input type="number" class="data-input share-input" data-col="연금저축(세금)"></td>
-                <td><input type="number" class="data-input share-input" data-col="연금저축(ISA)"></td>
-                <td><input type="number" class="data-input share-input" data-col="일반계좌"></td>
-                <td><input type="number" class="data-input share-input" data-col="KKB저금"></td>
-                <td><input type="number" class="data-input share-input" data-col="금융원"></td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(개인)_H"></td>
-                <td><input type="number" class="data-input share-input" data-col="ISA_H"></td>
-                <td><input type="number" class="data-input share-input" data-col="일반_H"></td>
-            </tr>
-            <tr data-ticker="453860" data-row-key="ACE_US30Y">
-                <td class="text-left">ACE 미국30년국채액티브(H)</td>
-                <td class="calculated-value fixed-data" data-col="평가금액">0</td>
-                <td class="current-price fixed-data" data-ticker-price>N/A</td>
-                <td class="total-shares fixed-data" data-col="전체 주식수">0</td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금/개인)"></td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(개인+퇴직금)"></td>
-                <td><input type="number" class="data-input share-input" data-col="구연금저축"></td>
-                <td><input type="number" class="data-input share-input" data-col="연금저축(세금)"></td>
-                <td><input type="number" class="data-input share-input" data-col="연금저축(ISA)"></td>
-                <td><input type="number" class="data-input share-input" data-col="일반계좌"></td>
-                <td><input type="number" class="data-input share-input" data-col="KKB저금"></td>
-                <td><input type="number" class="data-input share-input" data-col="금융원"></td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(개인)_H"></td>
-                <td><input type="number" class="data-input share-input" data-col="ISA_H"></td>
-                <td><input type="number" class="data-input share-input" data-col="일반_H"></td>
-            </tr>
-            <tr data-ticker="365730" data-row-key="SAMSUNG_SP500">
-                <td class="text-left">삼성미국S&P500인덱스H</td>
-                <td class="calculated-value fixed-data" data-col="평가금액">0</td>
-                <td class="current-price fixed-data" data-ticker-price>N/A</td>
-                <td class="total-shares fixed-data" data-col="전체 주식수">0</td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금/개인)"></td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(개인+퇴직금)"></td>
-                <td><input type="number" class="data-input share-input" data-col="구연금저축"></td>
-                <td><input type="number" class="data-input share-input" data-col="연금저축(세금)"></td>
-                <td><input type="number" class="data-input share-input" data-col="연금저축(ISA)"></td>
-                <td><input type="number" class="data-input share-input" data-col="일반계좌"></td>
-                <td><input type="number" class="data-input share-input" data-col="KKB저금"></td>
-                <td><input type="number" class="data-input share-input" data-col="금융원"></td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(개인)_H"></td>
-                <td><input type="number" class="data-input share-input" data-col="ISA_H"></td>
-                <td><input type="number" class="data-input share-input" data-col="일반_H"></td>
-            </tr>
-            <tr data-ticker="423850" data-row-key="ACE_GOLD">
-                <td class="text-left">ACE KRX금현물</td>
-                <td class="calculated-value fixed-data" data-col="평가금액">0</td>
-                <td class="current-price fixed-data" data-ticker-price>N/A</td>
-                <td class="total-
+                <td><input type="number" class="data-input share-
