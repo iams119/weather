@@ -1,199 +1,194 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<title>🌦 주요 도시 5일 날씨 예보</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-<style>
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: linear-gradient(to bottom, #e8f7ff, #f7fbff); transition: background 0.5s; }
-h1 { text-align: center; }
-.controls { text-align: center; margin-bottom: 10px; }
-select, input[type=submit], button { font-size: 1rem; padding: 8px 12px; margin: 10px 5px; border-radius: 8px; border: 1px solid #ccc; background: white; cursor: pointer; transition: background 0.2s; }
-select:hover, input[type=submit]:hover, button:hover { background: #dff4ff; }
-#map { height: 480px; margin-top: 20px; border-radius: 10px; box-shadow: 0 3px 7px rgba(0,0,0,0.2); }
-.forecast { margin-top: 25px; display: flex; justify-content: center; flex-wrap: wrap; }
-.day { background: white; border-radius: 12px; box-shadow: 0 3px 7px rgba(0,0,0,0.1); margin: 10px; padding: 15px; width: 200px; text-align: center; opacity: 0; transform: translateY(20px); animation: fadeInUp 0.6s forwards; cursor: pointer; transition: transform 0.2s; }
-.day:hover { transform: scale(1.05); }
-.day h3 { margin: 0 0 6px 0; }
-.day strong { color: #e63946; font-size: 1.2rem; }
-.humidity, .wind, .pressure { font-size: 0.9rem; color: #1d3557; margin: 4px 0; }
-.error { color: red; text-align: center; margin-top: 20px; }
-#loading { text-align: center; font-size: 1.1rem; color: #333; margin-top: 20px; }
-@keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
-@media (max-width: 600px) { .day { width: 100%; max-width: 280px; } }
-.modal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-.modal-content { background: white; border-radius: 10px; padding: 20px; max-width: 600px; width: 90%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-.modal-close { float: right; cursor: pointer; font-weight: bold; font-size: 1.2rem; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>투자 자산 현황 (실시간 Naver API)</title>
+    <style>
+        /* 기본적인 표 스타일 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: Arial, sans-serif;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: right;
+            white-space: nowrap;
+        }
+        th {
+            background-color: #f2f2f2;
+            text-align: center;
+            font-size: 0.85em;
+        }
+        .current-price {
+            font-weight: bold;
+            color: #1a73e8; /* 현재가를 강조 */
+        }
+        .text-left {
+            text-align: left;
+        }
+    </style>
 </head>
 <body>
-<h1 id="title">🌦 주요 도시 5일 날씨 예보</h1>
-<div class="controls">
-  <form id="weatherForm" style="display:inline;">
-    <select id="citySelect" required>
-      <option value="">도시 선택</option>
-    </select>
-    <input type="submit" value="검색" />
-  </form>
-  <button id="langToggle">English</button>
-</div>
-<div id="loading" style="display:none;">⏳ 데이터를 불러오는 중...</div>
-<div id="forecastResult" class="forecast"></div>
-<div id="map"></div>
 
-<div id="detailModal" class="modal">
-  <div class="modal-content">
-    <span class="modal-close">&times;</span>
-    <div id="modalBody"></div>
-  </div>
-</div>
+    <h1>투자 자산 현황</h1>
+    <p>현재가는 Naver Finance API를 통해 업데이트됩니다. (업데이트 시간: <span id="lastUpdated">N/A</span>)</p>
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script>
-const API_KEY='66f62464dec4a29271b61021e3858e76';
-let currentLang='kr', forecastRaw=null;
+    <table id="assetTable">
+        <thead>
+            <tr>
+                <th rowspan="2">상품</th>
+                <th rowspan="2">평가금액</th>
+                <th rowspan="2">현재가</th>
+                <th colspan="7">K (개인연금)</th>
+                <th colspan="4">H (IRP/ISA/일반)</th>
+            </tr>
+            <tr>
+                <th>IRP(퇴직금/개인)</th>
+                <th>IRP(개인)</th>
+                <th>IRP(개인+퇴직금)</th>
+                <th>구연금저축</th>
+                <th>연금저축(세금)</th>
+                <th>연금저축(ISA)</th>
+                <th>일반계좌</th>
+                <th>KKB저금</th>
+                <th>금융원</th>
+                <th>IRP(개인)</th>
+                <th>ISA</th>
+                <th>일반</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr data-ticker="305720"> 
+                <td class="text-left">TIGER 미국S&P500</td>
+                <td>408,330,560</td>
+                <td class="current-price" data-ticker-price>24,880</td> 
+                <td>2,740</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>157</td>
+                <td>1,067</td>
+                <td>1,599</td>
+                <td>10,049</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr data-ticker="352720">
+                <td class="text-left">KODEX 미국S&P500</td>
+                <td>156,476,140</td>
+                <td class="current-price" data-ticker-price>22,790</td>
+                <td>1,211</td>
+                <td>216</td>
+                <td></td>
+                <td></td>
+                <td>816</td>
+                <td>790</td>
+                <td></td>
+                <td>2,480</td>
+                <td></td>
+                <td></td>
+                <td>105</td>
+                <td>462</td>
+                <td>786</td>
+            </tr>
+            <tr data-ticker="069500">
+                <td class="text-left">KODEX 200</td>
+                <td>14,190,000</td>
+                <td class="current-price" data-ticker-price>12,900</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>1,100</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            </tbody>
+    </table>
 
-const cities=[
-{id:1835848,name:"Seoul",name_kr:"서울",lat:37.5665,lon:126.9780},
-{id:5128581,name:"New York",name_kr:"뉴욕",lat:40.7128,lon:-74.0060},
-{id:2643743,name:"London",name_kr:"런던",lat:51.5074,lon:-0.1278},
-{id:1850147,name:"Tokyo",name_kr:"도쿄",lat:35.6895,lon:139.6917},
-{id:2950159,name:"Berlin",name_kr:"베를린",lat:52.52,lon:13.405},
-{id:2147714,name:"Sydney",name_kr:"시드니",lat:-33.8688,lon:151.2093},
-{id:1880252,name:"Singapore",name_kr:"싱가포르",lat:1.3521,lon:103.8198},
-{id:3435910,name:"Buenos Aires",name_kr:"부에노스아이레스",lat:-34.6037,lon:-58.3816},
-{id:3448439,name:"São Paulo",name_kr:"상파울루",lat:-23.5505,lon:-46.6333},
-{id:360630,name:"Cairo",name_kr:"카이로",lat:30.0444,lon:31.2357},
-{id:3117735,name:"Madrid",name_kr:"마드리드",lat:40.4168,lon:-3.7038},
-{id:2988507,name:"Paris",name_kr:"파리",lat:48.8566,lon:2.3522},
-{id:993800,name:"Johannesburg",name_kr:"요하네스버그",lat:-26.2041,lon:28.0473},
-{id:6167865,name:"Toronto",name_kr:"토론토",lat:43.6532,lon:-79.3832},
-{id:1816670,name:"Beijing",name_kr:"베이징",lat:39.9042,lon:116.4074},
-{id:2643123,name:"Manchester",name_kr:"맨체스터",lat:53.4808,lon:-2.2426},
-{id:3451190,name:"Rio de Janeiro",name_kr:"리우데자네이루",lat:-22.9068,lon:-43.1729},
-{id:2673730,name:"Stockholm",name_kr:"스톡홀름",lat:59.3293,lon:18.0686}
-];
+    <script>
+        // 🚨 배포 후, 이 주소를 Vercel 또는 Netlify에서 생성된 API 주소로 변경해야 합니다.
+        // 예: https://your-github-repo-name.vercel.app/api/prices
+        const API_ENDPOINT = 'YOUR_DEPLOYED_SERVERLESS_FUNCTION_URL/api/prices'; 
 
-const citySelect=document.getElementById('citySelect');
-function fillCitySelect(){
-  citySelect.innerHTML=`<option value="">${currentLang==='kr'?'도시 선택':'Select City'}</option>`;
-  cities.forEach(c=>{
-    const opt=document.createElement('option');
-    opt.value=c.id;
-    opt.textContent=currentLang==='kr'?c.name_kr:c.name;
-    citySelect.appendChild(opt);
-  });
-}
-fillCitySelect();
+        // 티커 목록을 추출하는 함수
+        function getTickerList() {
+            const tickerElements = document.querySelectorAll('tr[data-ticker]');
+            const tickers = [];
+            tickerElements.forEach(row => {
+                const ticker = row.getAttribute('data-ticker');
+                if (ticker) {
+                    tickers.push(ticker);
+                }
+            });
+            return tickers;
+        }
 
-const map=L.map('map').setView([20,0],2);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ maxZoom:18 }).addTo(map);
-const markers=[];
-cities.forEach((city,i)=>{
-  const marker=L.marker([city.lat,city.lon]).addTo(map);
-  marker.bindTooltip(currentLang==='kr'?city.name_kr:city.name);
-  marker.on('click',()=>fetchForecast(city.id));
-  markers.push(marker);
-});
+        // 현재가를 가져와서 업데이트하는 함수
+        async function updateCurrentPrices() {
+            const tickers = getTickerList();
+            if (tickers.length === 0 || API_ENDPOINT.includes('YOUR_DEPLOYED_SERVERLESS_FUNCTION_URL')) {
+                 console.error("API 엔드포인트 URL을 배포된 주소로 설정해주세요.");
+                 return;
+            }
 
-document.getElementById('weatherForm').addEventListener('submit',e=>{
-  e.preventDefault();
-  fetchForecast(citySelect.value);
-});
+            console.log("실시간 현재가 업데이트 시작. 티커:", tickers);
 
-document.getElementById('langToggle').addEventListener('click',()=>{
-  currentLang=currentLang==='kr'?'en':'kr';
-  document.getElementById('title').textContent=currentLang==='kr'?'🌦 주요 도시 5일 날씨 예보':'🌦 Major City 5-Day Weather Forecast';
-  fillCitySelect();
-  markers.forEach((m,i)=>m.bindTooltip(currentLang==='kr'?cities[i].name_kr:cities[i].name));
-});
+            try {
+                // Serverless Function에 종목 코드를 쿼리 파라미터로 전송
+                const response = await fetch(`${API_ENDPOINT}?tickers=${tickers.join(',')}`);
 
-function fetchForecast(cityId){
-  if(!cityId) return alert(currentLang==='kr'?'도시를 선택해주세요!':'Please select a city!');
-  const loading=document.getElementById('loading');
-  loading.style.display='block';
-  fetch(`https://api.openweathermap.org/data/2.5/forecast?id=${cityId}&appid=${API_KEY}&units=metric&lang=${currentLang}`)
-    .then(res=>res.json())
-    .then(data=>{
-      loading.style.display='none';
-      if(data.cod==='200'){
-        forecastRaw=data;
-        showForecast(data);
-        map.setView([data.city.coord.lat,data.city.coord.lon],7);
-      }else{
-        document.getElementById('forecastResult').innerHTML=`<p class="error">${currentLang==='kr'?'도시 정보를 찾을 수 없습니다.':'City data not found.'}</p>`;
-      }
-    })
-    .catch(()=>{
-      loading.style.display='none';
-      document.getElementById('forecastResult').innerHTML=`<p class="error">${currentLang==='kr'?'오류가 발생했습니다.':'An error occurred.'}</p>`;
-    });
-}
+                if (!response.ok) {
+                    throw new Error(`HTTP 오류: ${response.status}`);
+                }
 
-function mostFrequent(arr){ const count={}; arr.forEach(v=>count[v]=(count[v]||0)+1); return Object.keys(count).reduce((a,b)=>count[a]>count[b]?a:b); }
+                const data = await response.json();
+                
+                // 받아온 데이터로 표 업데이트
+                for (const ticker in data) {
+                    const price = data[ticker];
+                    if (price) {
+                        const formattedPrice = price.toLocaleString('ko-KR', { minimumFractionDigits: 0 }); // 쉼표 추가 및 형식 지정
+                        const row = document.querySelector(`tr[data-ticker="${ticker}"]`);
+                        if (row) {
+                            const priceCell = row.querySelector('[data-ticker-price]');
+                            if (priceCell) {
+                                priceCell.textContent = formattedPrice;
+                                priceCell.style.color = 'green';
+                            }
+                        }
+                    }
+                }
+                
+                // 마지막 업데이트 시간 기록
+                document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString('ko-KR');
+                console.log("현재가 업데이트 완료.");
 
-function showForecast(data){
-  const daily={};
-  data.list.forEach(item=>{
-    const date=item.dt_txt.split(' ')[0];
-    if(!daily[date]) daily[date]={ temps:[], feels:[], humid:[], wind:[], press:[], desc:[], icon:[], details:[] };
-    daily[date].temps.push(item.main.temp);
-    daily[date].feels.push(item.main.feels_like);
-    daily[date].humid.push(item.main.humidity);
-    daily[date].wind.push(item.wind.speed);
-    daily[date].press.push(item.main.pressure);
-    daily[date].desc.push(item.weather[0].description);
-    daily[date].icon.push(item.weather[0].icon);
-    daily[date].details.push(item);
-  });
+            } catch (error) {
+                console.error("현재가 업데이트 실패:", error);
+                document.getElementById('lastUpdated').textContent = '업데이트 실패';
+            }
+        }
 
-  const days=Object.keys(daily).slice(0,5);
-  let html='';
-  days.forEach(date=>{
-    const d=daily[date];
-    const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
-    const maxT=Math.max(...d.temps).toFixed(1);
-    const minT=Math.min(...d.temps).toFixed(1);
-    const avgF=avg(d.feels).toFixed(1);
-    const avgH=avg(d.humid).toFixed(0);
-    const avgW=avg(d.wind).toFixed(1);
-    const avgP=avg(d.press).toFixed(0);
-    const desc=mostFrequent(d.desc);
-    const icon=mostFrequent(d.icon);
-    const dateObj=new Date(date);
-    const dayNames=currentLang==='kr'?['일','월','화','수','목','금','토']:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    const dateStr=`${dateObj.getMonth()+1}/${dateObj.getDate()} (${dayNames[dateObj.getDay()]})`;
-
-  html += `<div class="day" onclick="showDetails('${date}')">
-  <h3>${dateStr}</h3>
-  <img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="${desc}"><br>
-  <strong>${minT}° / ${maxT}°C</strong>
-  <p>${desc}</p>
-  <p class="humidity">${currentLang==='kr'?'체감':'Feels'}: ${avgF} ℃</p>
-  <p class="wind">${currentLang==='kr'?'풍속':'Wind'}: ${avgW} m/s</p>
-  <p class="pressure">${currentLang==='kr'?'기압':'Pressure'}: ${avgP} hPa</p>
-  <p>${currentLang==='kr'?'습도':'Humidity'}: ${avgH}%</p>
-</div>`;
-  
-  });
-  document.getElementById('forecastResult').innerHTML=html;
-}
-
-function showDetails(date){
-  const modal=document.getElementById('detailModal'), body=document.getElementById('modalBody');
-  const dayData=forecastRaw.list.filter(i=>i.dt_txt.startsWith(date));
-  let html=`<h2>${date}</h2><table style="width:100%;text-align:center;"><tr><th>${currentLang==='kr'?'시간':'Time'}</th><th>${currentLang==='kr'?'기온':'Temp'}</th><th>${currentLang==='kr'?'체감':'Feels'}</th><th>${currentLang==='kr'?'습도':'Humidity'}</th><th>${currentLang==='kr'?'풍속':'Wind'}</th><th>${currentLang==='kr'?'기압':'Pressure'}</th></tr>`;
-  dayData.forEach(item=>{
-    const t=item.dt_txt.split(' ')[1].slice(0,5);
-    html+=`<tr><td>${t}</td><td>${item.main.temp}°C</td><td>${item.main.feels_like}°C</td><td>${item.main.humidity}%</td><td>${item.wind.speed} m/s</td><td>${item.main.pressure} hPa</td></tr>`;
-  });
-  html+='</table>';
-  body.innerHTML=html;
-  modal.style.display='flex';
-}
-
-document.querySelector('.modal-close').addEventListener('click',()=>{ document.getElementById('detailModal').style.display='none'; });
-window.addEventListener('click',e=>{ if(e.target.id==='detailModal') e.target.style.display='none'; });
-</script>
+        // 페이지 로드 시 현재가 업데이트 실행 및 30초마다 반복 (실시간 업데이트)
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCurrentPrices();
+            setInterval(updateCurrentPrices, 30 * 1000); // 30초마다 업데이트
+        });
+    </script>
 </body>
 </html>
