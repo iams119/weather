@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>투자 자산 현황 (계산 버튼 적용)</title>
+    <title>투자 자산 현황 (합계 포함)</title>
     <style>
         /* 기본적인 표 스타일 */
         table {
@@ -69,12 +69,21 @@
             border-radius: 5px;
             margin-bottom: 10px;
         }
+        /* 최종 합계 행 스타일 */
+        .grand-total-row {
+            background-color: #c8e6c9; /* 연한 녹색 */
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        .grand-total-row td[data-col="합계금액"] {
+            color: #388e3c; /* 진한 녹색 */
+        }
     </style>
 </head>
 <body>
 
     <h1>투자 자산 현황</h1>
-    <p>계좌별 주식수와 예수금/평가총액을 입력하세요. **계산 및 저장 버튼을 눌러야 전체 주식수와 평가금액이 업데이트됩니다.** (현재가 업데이트 시간: <span id="lastUpdated">N/A</span>)</p>
+    <p>계좌별 주식수와 예수금/평가총액을 입력하세요. **계산 및 저장 버튼을 눌러야 전체 주식수와 평가금액, 그리고 최종 합계가 업데이트됩니다.** (현재가 업데이트 시간: <span id="lastUpdated">N/A</span>)</p>
 
     <button id="calculateAndSaveBtn">계산 및 저장</button>
 
@@ -85,19 +94,21 @@
                 <th rowspan="2">평가금액</th>
                 <th rowspan="2">현재가</th>
                 <th rowspan="2">전체 주식수</th> 
-                <th colspan="7">K (개인연금)</th>
-                <th colspan="4">H (IRP/ISA/일반)</th>
+                <th colspan="7">K </th>
+                <th colspan="4">H </th>
             </tr>
             <tr>
-                <th>IRP(퇴직금/개인)</th>
+                <th>IRP(퇴직금1)</th>
+                <th>연저(퇴직금2)</th>
                 <th>IRP(개인)</th>
-                <th>IRP(개인+퇴직금)</th>
-                <th>구연금저축</th>
-                <th>연금저축(세금)</th>
-                <th>연금저축(ISA)</th>
+                <th>연저(개인)세공/th>
+                <th>연저(개인)비세공</th>
+                <th>ISA</th>
                 <th>일반계좌</th>
-                <th>KKB저금</th>
-                <th>금융원</th>
+                <th>KRX금</th>
+                <th>구)개인연금</th>
+                <th>삼성생명</th>
+                <th>연저(개인)</th>
                 <th>IRP(개인)</th>
                 <th>ISA</th>
                 <th>일반</th>
@@ -110,41 +121,545 @@
                 <td class="calculated-value fixed-data" data-col="평가금액">0</td>
                 <td class="current-price fixed-data" data-ticker-price>N/A</td> 
                 <td class="total-shares fixed-data" data-col="전체 주식수">0</td> 
-                <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금/개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금1)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(퇴직금2)"></td>
                 <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(개인+퇴직금)"></td>
-                <td><input type="number" class="data-input share-input" data-col="구연금저축"></td>
-                <td><input type="number" class="data-input share-input" data-col="연금저축(세금)"></td>
-                <td><input type="number" class="data-input share-input" data-col="연금저축(ISA)"></td>
-                <td><input type="number" class="data-input share-input" data-col="일반계좌"></td>
-                <td><input type="number" class="data-input share-input" data-col="KKB저금"></td>
-                <td><input type="number" class="data-input share-input" data-col="금융원"></td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(개인)_H"></td>
-                <td><input type="number" class="data-input share-input" data-col="ISA_H"></td>
-                <td><input type="number" class="data-input share-input" data-col="일반_H"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)비세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+                <td><input type="number" class="data-input share-input" data-col="KRX금"></td>
+                <td><input type="number" class="data-input share-input" data-col="구)개인연금"></td>
+                <td><input type="number" class="data-input share-input" data-col="삼성생명"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
             </tr>
             <tr data-ticker="352720" data-row-key="KODEX_SP500">
                 <td class="text-left">KODEX 미국S&P500</td>
                 <td class="calculated-value fixed-data" data-col="평가금액">0</td>
                 <td class="current-price fixed-data" data-ticker-price>N/A</td>
                 <td class="total-shares fixed-data" data-col="전체 주식수">0</td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금/개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금1)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(퇴직금2)"></td>
                 <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(개인+퇴직금)"></td>
-                <td><input type="number" class="data-input share-input" data-col="구연금저축"></td>
-                <td><input type="number" class="data-input share-input" data-col="연금저축(세금)"></td>
-                <td><input type="number" class="data-input share-input" data-col="연금저축(ISA)"></td>
-                <td><input type="number" class="data-input share-input" data-col="일반계좌"></td>
-                <td><input type="number" class="data-input share-input" data-col="KKB저금"></td>
-                <td><input type="number" class="data-input share-input" data-col="금융원"></td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(개인)_H"></td>
-                <td><input type="number" class="data-input share-input" data-col="ISA_H"></td>
-                <td><input type="number" class="data-input share-input" data-col="일반_H"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)비세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+                <td><input type="number" class="data-input share-input" data-col="KRX금"></td>
+                <td><input type="number" class="data-input share-input" data-col="구)개인연금"></td>
+                <td><input type="number" class="data-input share-input" data-col="삼성생명"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
             </tr>
             <tr data-ticker="458510" data-row-key="RISE_NASDQ100">
                 <td class="text-left">RISE 미국나스닥100</td>
                 <td class="calculated-value fixed-data" data-col="평가금액">0</td>
                 <td class="current-price fixed-data" data-ticker-price>N/A</td>
                 <td class="total-shares fixed-data" data-col="전체 주식수">0</td>
-                <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금/개인)"></td>
-                <td><input type="number
+                <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금1)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(퇴직금2)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)비세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+                <td><input type="number" class="data-input share-input" data-col="KRX금"></td>
+                <td><input type="number" class="data-input share-input" data-col="구)개인연금"></td>
+                <td><input type="number" class="data-input share-input" data-col="삼성생명"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+            </tr>
+            <tr data-ticker="474020" data-row-key="1Q_SP500_MIX">
+                <td class="text-left">1Q 미국S&P500미국채혼합50액티브</td>
+                <td class="calculated-value fixed-data" data-col="평가금액">0</td>
+                <td class="current-price fixed-data" data-ticker-price>N/A</td>
+                <td class="total-shares fixed-data" data-col="전체 주식수">0</td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금1)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(퇴직금2)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)비세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+                <td><input type="number" class="data-input share-input" data-col="KRX금"></td>
+                <td><input type="number" class="data-input share-input" data-col="구)개인연금"></td>
+                <td><input type="number" class="data-input share-input" data-col="삼성생명"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+            </tr>
+            <tr data-ticker="474010" data-row-key="1Q_NASDAQ100_MIX">
+                <td class="text-left">1Q 미국나스닥100미국채혼합50액티브</td>
+                <td class="calculated-value fixed-data" data-col="평가금액">0</td>
+                <td class="current-price fixed-data" data-ticker-price>N/A</td>
+                <td class="total-shares fixed-data" data-col="전체 주식수">0</td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금1)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(퇴직금2)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)비세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+                <td><input type="number" class="data-input share-input" data-col="KRX금"></td>
+                <td><input type="number" class="data-input share-input" data-col="구)개인연금"></td>
+                <td><input type="number" class="data-input share-input" data-col="삼성생명"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+            </tr>
+            <tr data-ticker="453860" data-row-key="ACE_US30Y">
+                <td class="text-left">ACE 미국30년국채액티브(H)</td>
+                <td class="calculated-value fixed-data" data-col="평가금액">0</td>
+                <td class="current-price fixed-data" data-ticker-price>N/A</td>
+                <td class="total-shares fixed-data" data-col="전체 주식수">0</td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금1)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(퇴직금2)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)비세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+                <td><input type="number" class="data-input share-input" data-col="KRX금"></td>
+                <td><input type="number" class="data-input share-input" data-col="구)개인연금"></td>
+                <td><input type="number" class="data-input share-input" data-col="삼성생명"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+            </tr>
+            <tr data-ticker="365730" data-row-key="SAMSUNG_SP500">
+                <td class="text-left">삼성미국S&P500인덱스H</td>
+                <td class="calculated-value fixed-data" data-col="평가금액">0</td>
+                <td class="current-price fixed-data" data-ticker-price>N/A</td>
+                <td class="total-shares fixed-data" data-col="전체 주식수">0</td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금1)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(퇴직금2)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)비세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+                <td><input type="number" class="data-input share-input" data-col="KRX금"></td>
+                <td><input type="number" class="data-input share-input" data-col="구)개인연금"></td>
+                <td><input type="number" class="data-input share-input" data-col="삼성생명"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+            </tr>
+            <tr data-ticker="423850" data-row-key="ACE_GOLD">
+                <td class="text-left">ACE KRX금현물</td>
+                <td class="calculated-value fixed-data" data-col="평가금액">0</td>
+                <td class="current-price fixed-data" data-ticker-price>N/A</td>
+                <td class="total-shares fixed-data" data-col="전체 주식수">0</td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금1)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(퇴직금2)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)비세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+                <td><input type="number" class="data-input share-input" data-col="KRX금"></td>
+                <td><input type="number" class="data-input share-input" data-col="구)개인연금"></td>
+                <td><input type="number" class="data-input share-input" data-col="삼성생명"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+            </tr>
+            <tr data-ticker="370500" data-row-key="KODEX200TR">
+                <td class="text-left">KODEX 200TR</td>
+                <td class="calculated-value fixed-data" data-col="평가금액">0</td>
+                <td class="current-price fixed-data" data-ticker-price>N/A</td>
+                <td class="total-shares fixed-data" data-col="전체 주식수">0</td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금1)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(퇴직금2)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)비세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+                <td><input type="number" class="data-input share-input" data-col="KRX금"></td>
+                <td><input type="number" class="data-input share-input" data-col="구)개인연금"></td>
+                <td><input type="number" class="data-input share-input" data-col="삼성생명"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+            </tr>
+            <tr data-ticker="427500" data-row-key="KODEX200_COVEREDCALL">
+                <td class="text-left">KODEX 200타겟위클리커버드콜</td>
+                <td class="calculated-value fixed-data" data-col="평가금액">0</td>
+                <td class="current-price fixed-data" data-ticker-price>N/A</td>
+                <td class="total-shares fixed-data" data-col="전체 주식수">0</td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금1)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(퇴직금2)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)비세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+                <td><input type="number" class="data-input share-input" data-col="KRX금"></td>
+                <td><input type="number" class="data-input share-input" data-col="구)개인연금"></td>
+                <td><input type="number" class="data-input share-input" data-col="삼성생명"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+            </tr>
+            <tr data-ticker="175860" data-row-key="KRX_GOLD">
+                <td class="text-left">KRX 금1g</td>
+                <td class="calculated-value fixed-data" data-col="평가금액">0</td>
+                <td class="current-price fixed-data" data-ticker-price>N/A</td>
+                <td class="total-shares fixed-data" data-col="전체 주식수">0</td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금1)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(퇴직금2)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)비세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+                <td><input type="number" class="data-input share-input" data-col="KRX금"></td>
+                <td><input type="number" class="data-input share-input" data-col="구)개인연금"></td>
+                <td><input type="number" class="data-input share-input" data-col="삼성생명"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+            </tr>
+            <tr data-ticker="379530" data-row-key="KODEX_MM_ACTV">
+                <td class="text-left">KODEX 머니마켓액티브</td>
+                <td class="calculated-value fixed-data" data-col="평가금액">0</td>
+                <td class="current-price fixed-data" data-ticker-price>N/A</td>
+                <td class="total-shares fixed-data" data-col="전체 주식수">0</td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금1)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(퇴직금2)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)비세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+                <td><input type="number" class="data-input share-input" data-col="KRX금"></td>
+                <td><input type="number" class="data-input share-input" data-col="구)개인연금"></td>
+                <td><input type="number" class="data-input share-input" data-col="삼성생명"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+            </tr>
+            <tr data-row-key="VOO"> 
+                <td class="text-left">Vanguard S&P 500 ETF (VOO)</td>
+                <td class="calculated-value fixed-data" data-col="평가금액">0</td>
+                <td class="current-price fixed-data" data-col="current_price_voo">N/A</td> 
+                <td class="total-shares fixed-data" data-col="전체 주식수">0</td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금1)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(퇴직금2)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)비세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+                <td><input type="number" class="data-input share-input" data-col="KRX금"></td>
+                <td><input type="number" class="data-input share-input" data-col="구)개인연금"></td>
+                <td><input type="number" class="data-input share-input" data-col="삼성생명"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+            </tr>
+            
+            <tr class="total-row" data-row-key="예수금">
+                <td class="text-left">예수금</td>
+                <td data-col="평가금액" class="calculated-value fixed-data">0</td> <td class="text-center fixed-data">N/A</td> 
+                <td class="text-center fixed-data">N/A</td> 
+                <td><input type="number" class="data-input share-input" data-col="IRP(퇴직금1)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(퇴직금2)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)비세공"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+                <td><input type="number" class="data-input share-input" data-col="KRX금"></td>
+                <td><input type="number" class="data-input share-input" data-col="구)개인연금"></td>
+                <td><input type="number" class="data-input share-input" data-col="삼성생명"></td>
+                <td><input type="number" class="data-input share-input" data-col="연저(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input share-input" data-col="ISA"></td>
+                <td><input type="number" class="data-input share-input" data-col="일반"></td>
+            </tr>
+            <tr class="count-row" data-row-key="상품수">
+                <td class="text-left">상품수</td>
+                <td class="text-center fixed-data" data-col="상품개수">0</td> 
+                <td class="text-center fixed-data">N/A</td>
+                <td class="text-center fixed-data">N/A</td>
+                <td class="text-center fixed-data">N/A</td>
+                <td class="text-center fixed-data">N/A</td>
+                <td class="text-center fixed-data">N/A</td>
+                <td class="text-center fixed-data">N/A</td>
+                <td class="text-center fixed-data">N/A</td>
+                <td class="text-center fixed-data">N/A</td>
+                <td class="text-center fixed-data">N/A</td>
+                <td class="text-center fixed-data">N/A</td>
+                <td class="text-center fixed-data">N/A</td>
+                <td class="text-center fixed-data">N/A</td>
+                <td class="text-center fixed-data">N/A</td>
+            </tr>
+            
+            <tr class="grand-total-row" data-row-key="Total">
+                <td class="text-left">합계 (총 평가 자산)</td>
+                <td class="fixed-data" data-col="합계금액">0</td>
+                <td class="text-center fixed-data" colspan="14"></td> </tr>
+
+        </tbody>
+    </table>
+
+    <script>
+        const API_ENDPOINT = 'YOUR_DEPLOYED_SERVERLESS_FUNCTION_URL/api/prices'; 
+        const LOCAL_STORAGE_KEY = 'assetData';
+        const VOO_PRICE_KRW = 13000; 
+
+        // --- 데이터 저장 및 로드 함수 ---
+        
+        function saveInputs() {
+            const data = {};
+            // INPUT 태그와 계산된 TD 태그의 텍스트 콘텐츠를 모두 저장
+            const elements = document.querySelectorAll('.data-input, td[data-col="평가금액"], td[data-col="전체 주식수"], td[data-col="상품개수"], td[data-col="합계금액"]');
+            
+            elements.forEach(el => {
+                const row = el.closest('tr');
+                if (!row) return;
+
+                const rowKey = row.getAttribute('data-row-key');
+                const colKey = el.getAttribute('data-col');
+                
+                if (rowKey && colKey) {
+                    if (!data[rowKey]) data[rowKey] = {};
+                    
+                    const value = el.tagName === 'INPUT' ? el.value : el.textContent;
+                    data[rowKey][colKey] = value;
+                }
+            });
+
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function loadInputs() {
+            const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (!storedData) return;
+
+            const data = JSON.parse(storedData);
+            for (const rowKey in data) {
+                const row = document.querySelector(`tr[data-row-key="${rowKey}"]`);
+                if (row) {
+                    for (const colKey in data[rowKey]) {
+                        let element = row.querySelector(`input[data-col="${colKey}"]`);
+                        if (!element) {
+                            element = row.querySelector(`td[data-col="${colKey}"]`);
+                        }
+                        
+                        if (element) {
+                            const value = data[rowKey][colKey];
+                            if (element.tagName === 'INPUT') {
+                                element.value = value;
+                            } else {
+                                element.textContent = value;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /**
+         * 핵심 계산 함수: 
+         * 1. 계좌별 주식수 합산 (전체 주식수) 및 평가금액 계산
+         * 2. 예수금 합산 및 '예수금' 행의 '평가금액' 칸에 반영
+         * 3. 모든 종목의 평가금액 + 예수금 합산 (합계)
+         * 4. 상품수 계산
+         */
+        function calculateTotals() {
+            const shareRows = document.querySelectorAll('tbody > tr[data-ticker], tbody > tr[data-row-key="VOO"]'); 
+            const depositRow = document.querySelector('tr[data-row-key="예수금"]');
+            let totalAssetValue = 0; // 총 평가 자산 (종목 + 예수금)
+            let productCount = 0;
+
+            // --- 1. 종목별 계산 및 총 평가금액 합산 ---
+            shareRows.forEach(row => {
+                const rowKey = row.getAttribute('data-row-key');
+                let totalShares = 0;
+                
+                // 계좌별 주식수 합산
+                const shareInputs = row.querySelectorAll('.share-input'); 
+                shareInputs.forEach(input => {
+                    const value = parseFloat(input.value) || 0;
+                    if (value > 0) {
+                        totalShares += value;
+                    }
+                });
+                
+                // 전체 주식수 셀 업데이트
+                const totalSharesCell = row.querySelector('td[data-col="전체 주식수"]');
+                if (totalSharesCell) {
+                    totalSharesCell.textContent = totalShares.toLocaleString('ko-KR', { maximumFractionDigits: 0 });
+                }
+
+                // 평가금액 계산
+                let currentPrice = 0;
+                const priceCell = row.querySelector('[data-ticker-price], td[data-col="current_price_voo"]');
+                
+                if (rowKey === 'VOO') {
+                    currentPrice = VOO_PRICE_KRW;
+                } else if (priceCell) {
+                    const priceText = priceCell.textContent.replace(/[^0-9.]/g, ''); 
+                    currentPrice = parseFloat(priceText) || 0;
+                }
+
+                const valuationAmountCell = row.querySelector('td[data-col="평가금액"]');
+                let valuationAmount = 0;
+
+                if (currentPrice > 0 && totalShares > 0 && valuationAmountCell) {
+                    valuationAmount = currentPrice * totalShares;
+                    valuationAmountCell.textContent = valuationAmount.toLocaleString('ko-KR', { maximumFractionDigits: 0 });
+                } else if (valuationAmountCell) {
+                    valuationAmountCell.textContent = '0';
+                }
+                
+                // 총 합계에 추가
+                totalAssetValue += valuationAmount;
+
+                // 상품 수 계산
+                if (totalShares > 0) {
+                    productCount++;
+                }
+            });
+            
+            // --- 2. 예수금 합산 및 총 평가금액 합산 ---
+            if (depositRow) {
+                let totalDeposit = 0;
+                const depositInputs = depositRow.querySelectorAll('.deposit-input');
+                depositInputs.forEach(input => {
+                    const value = parseFloat(input.value) || 0;
+                    totalDeposit += value;
+                });
+                
+                // 예수금 행의 평가금액 칸에 예수금 총합 반영
+                const depositTotalCell = depositRow.querySelector('td[data-col="평가금액"]');
+                if (depositTotalCell) {
+                    depositTotalCell.textContent = totalDeposit.toLocaleString('ko-KR', { maximumFractionDigits: 0 });
+                }
+
+                // 총 합계에 예수금 추가
+                totalAssetValue += totalDeposit;
+            }
+
+            // --- 3. 최종 합계 행 업데이트 ---
+            const grandTotalCell = document.querySelector('tr[data-row-key="Total"] td[data-col="합계금액"]');
+            if (grandTotalCell) {
+                grandTotalCell.textContent = totalAssetValue.toLocaleString('ko-KR', { maximumFractionDigits: 0 });
+            }
+
+            // --- 4. 상품수 행 업데이트 ---
+            const countCell = document.querySelector('tr[data-row-key="상품수"] td[data-col="상품개수"]');
+            if (countCell) {
+                countCell.textContent = productCount;
+            }
+
+            // 계산 후 저장소에 상태 업데이트
+            saveInputs();
+        }
+
+        // --- API 호출 및 현재가 업데이트 함수 (로직 변경 없음) ---
+        
+        function getTickerList() {
+            const tickerElements = document.querySelectorAll('tr[data-ticker]');
+            const tickers = [];
+            tickerElements.forEach(row => {
+                const ticker = row.getAttribute('data-ticker');
+                if (ticker) {
+                    tickers.push(ticker);
+                }
+            });
+            return tickers;
+        }
+
+        async function updateCurrentPrices() {
+            const tickers = getTickerList();
+            
+            // 1. VOO 가격 임시 업데이트
+            const vooPriceCell = document.querySelector('td[data-col="current_price_voo"]');
+            if(vooPriceCell) {
+                vooPriceCell.textContent = VOO_PRICE_KRW.toLocaleString('ko-KR') + ' (가정)';
+            }
+            
+            if (tickers.length === 0 || API_ENDPOINT.includes('YOUR_DEPLOYED_SERVERLESS_FUNCTION_URL')) {
+                 console.error("API 엔드포인트 URL을 설정해야 합니다. (실시간 업데이트 실패)");
+                 return;
+            }
+
+            try {
+                const response = await fetch(`${API_ENDPOINT}?tickers=${tickers.join(',')}`);
+                if (!response.ok) { throw new Error(`HTTP 오류: ${response.status}`); }
+                const data = await response.json();
+                
+                // 2. API 가격 업데이트
+                for (const ticker in data) {
+                    const price = data[ticker];
+                    if (price) {
+                        const formattedPrice = price.toLocaleString('ko-KR', { minimumFractionDigits: 0 }); 
+                        
+                        const row = document.querySelector(`tr[data-ticker="${ticker}"]`);
+                        if (row) {
+                            const priceCell = row.querySelector('[data-ticker-price]');
+                            if (priceCell) {
+                                priceCell.textContent = formattedPrice;
+                                priceCell.style.color = 'green';
+                            }
+                        }
+                    }
+                }
+                
+                // 가격 업데이트 시간 기록
+                document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString('ko-KR');
+
+            } catch (error) {
+                console.error("현재가 업데이트 실패:", error);
+                document.getElementById('lastUpdated').textContent = '업데이트 실패';
+            }
+        }
+
+        // --- 초기화 및 이벤트 리스너 ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. 저장된 값 로드
+            loadInputs();
+            
+            // 2. 최초 로드 시, 로드된 데이터를 바탕으로 합계 및 평가금액 계산 및 저장
+            calculateTotals(); 
+            
+            // 3. 현재가 업데이트 시작
+            updateCurrentPrices();
+            setInterval(updateCurrentPrices, 30 * 1000); 
+            
+            // 4. "계산 및 저장" 버튼 이벤트 리스너 설정
+            document.getElementById('calculateAndSaveBtn').addEventListener('click', () => {
+                calculateTotals(); // 주식수 합산, 평가금액 계산 및 저장 수행
+                alert('주식수, 평가금액 및 최종 합계 계산이 완료되었으며, 데이터가 저장되었습니다.');
+            });
+
+            // 5. 모든 입력 필드는 입력 시 로컬 저장소에 바로 저장만 수행합니다. (계산은 버튼 클릭 시에만)
+            document.querySelectorAll('.data-input').forEach(input => {
+                input.addEventListener('input', saveInputs);
+            });
+        });
+    </script>
+</body>
+</html>
