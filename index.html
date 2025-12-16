@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>투자 자산 현황 (합계 포함)</title>
     <style>
-        /* (스타일 시트 내용은 변경 없음) */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -23,6 +22,25 @@
             text-align: center;
             font-size: 0.85em;
         }
+
+        /* --- 계좌 입력 셀의 최소 너비 설정 (균일한 너비 적용) --- */
+        /* 계좌 이름 열 (두 번째 <thead> <tr>의 <th>) */
+        thead tr:nth-child(2) th {
+            width: 5%; /* 모든 계좌 헤더에 균일한 너비 설정 */
+            min-width: 60px; /* 너무 좁아지는 것을 방지 */
+            max-width: 90px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        /* 계좌별 주식수/예수금 입력 셀 (<tbody>의 <td>) */
+        tbody tr td:has(.share-input), 
+        tbody tr td:has(.deposit-input) {
+            width: 5%; /* 헤더와 동일한 너비 설정 */
+            min-width: 60px; /* 너무 좁아지는 것을 방지 */
+            max-width: 90px;
+        }
+        /* ----------------------------------------------- */
+
         .current-price, .total-shares, .calculated-value {
             font-weight: bold;
             color: #1a73e8; 
@@ -570,7 +588,7 @@
             saveInputs();
         }
 
-        // --- API 호출 및 현재가 업데이트 함수 (로직 변경 없음) ---
+        // --- API 호출 및 현재가 업데이트 함수 ---
         
         function getTickerList() {
             const tickerElements = document.querySelectorAll('tr[data-ticker]');
@@ -594,7 +612,7 @@
             }
             
             if (tickers.length === 0 || API_ENDPOINT.includes('YOUR_DEPLOYED_SERVERLESS_FUNCTION_URL')) {
-                 console.error("API 엔드포인트 URL을 설정해야 합니다. (실시간 업데이트 실패)");
+                 console.warn("API 엔드포인트 URL을 설정해야 합니다. 실시간 업데이트가 비활성화됩니다.");
                  document.getElementById('lastUpdated').textContent = 'API URL 설정 필요';
                  // API 호출이 안 될 경우에도 계산은 가능하도록 calculateTotals 호출
                  calculateTotals(); 
