@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>투자 자산 현황 (실시간 Naver API)</title>
+    <title>투자 자산 현황 (사용자 입력 & 실시간 현재가)</title>
     <style>
-        /* 기본적인 표 스타일 (이전과 동일) */
+        /* 기본적인 표 스타일 */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -14,7 +14,7 @@
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 4px; /* 입력 필드를 위해 패딩 조정 */
             text-align: right;
             white-space: nowrap;
         }
@@ -26,20 +26,37 @@
         .current-price {
             font-weight: bold;
             color: #1a73e8; /* 현재가를 강조 */
+            padding: 8px; /* 현재가는 입력 필드가 아니므로 패딩 유지 */
         }
         .text-left {
             text-align: left;
         }
         .total-row {
             font-weight: bold;
-            background-color: #e0f2f1; /* 총합 행 배경색 */
+            background-color: #e0f2f1;
+        }
+        .text-center {
+            text-align: center;
+        }
+        /* 입력 필드 스타일 */
+        .data-input {
+            width: 100%;
+            box-sizing: border-box;
+            border: none;
+            text-align: right;
+            padding: 4px 2px;
+            background-color: transparent;
+        }
+        /* 현재가 열은 입력 불가 */
+        .fixed-data {
+            padding: 8px;
         }
     </style>
 </head>
 <body>
 
     <h1>투자 자산 현황</h1>
-    <p>현재가는 Naver Finance API를 통해 업데이트됩니다. (업데이트 시간: <span id="lastUpdated">N/A</span>)</p>
+    <p>평가금액 및 계좌별 값을 입력하세요. **입력 값은 브라우저에 자동으로 저장됩니다.** 현재가는 30초마다 업데이트됩니다. (업데이트 시간: <span id="lastUpdated">N/A</span>)</p>
 
     <table id="assetTable">
         <thead>
@@ -66,174 +83,135 @@
             </tr>
         </thead>
         <tbody>
-            <tr data-ticker="360200"> 
+            <tr data-ticker="360200" data-row-key="TIGER_SP500"> 
                 <td class="text-left">TIGER 미국S&P500</td>
-                <td>0</td>
-                <td class="current-price" data-ticker-price>0</td> 
-                <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                <td><input type="number" class="data-input" data-col="평가금액"></td>
+                <td class="current-price fixed-data" data-ticker-price>N/A</td> 
+                <td><input type="number" class="data-input" data-col="IRP(퇴직금/개인)"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인+퇴직금)"></td>
+                <td><input type="number" class="data-input" data-col="구연금저축"></td>
+                <td><input type="number" class="data-input" data-col="연금저축(세금)"></td>
+                <td><input type="number" class="data-input" data-col="연금저축(ISA)"></td>
+                <td><input type="number" class="data-input" data-col="일반계좌"></td>
+                <td><input type="number" class="data-input" data-col="KKB저금"></td>
+                <td><input type="number" class="data-input" data-col="금융원"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인)_H"></td>
+                <td><input type="number" class="data-input" data-col="ISA_H"></td>
+                <td><input type="number" class="data-input" data-col="일반_H"></td>
             </tr>
-            <tr data-ticker="352720">
+            <tr data-ticker="352720" data-row-key="KODEX_SP500">
                 <td class="text-left">KODEX 미국S&P500</td>
-                <td>0</td>
-                <td class="current-price" data-ticker-price>0</td>
-                <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                <td><input type="number" class="data-input" data-col="평가금액"></td>
+                <td class="current-price fixed-data" data-ticker-price>N/A</td>
+                <td><input type="number" class="data-input" data-col="IRP(퇴직금/개인)"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인+퇴직금)"></td>
+                <td><input type="number" class="data-input" data-col="구연금저축"></td>
+                <td><input type="number" class="data-input" data-col="연금저축(세금)"></td>
+                <td><input type="number" class="data-input" data-col="연금저축(ISA)"></td>
+                <td><input type="number" class="data-input" data-col="일반계좌"></td>
+                <td><input type="number" class="data-input" data-col="KKB저금"></td>
+                <td><input type="number" class="data-input" data-col="금융원"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인)_H"></td>
+                <td><input type="number" class="data-input" data-col="ISA_H"></td>
+                <td><input type="number" class="data-input" data-col="일반_H"></td>
             </tr>
-            <tr data-ticker="458510">
+            <tr data-ticker="458510" data-row-key="RISE_NASDQ100">
                 <td class="text-left">RISE 미국나스닥100</td>
-                <td>0</td>
-                <td class="current-price" data-ticker-price>0</td>
-                <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                <td><input type="number" class="data-input" data-col="평가금액"></td>
+                <td class="current-price fixed-data" data-ticker-price>N/A</td>
+                <td><input type="number" class="data-input" data-col="IRP(퇴직금/개인)"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인+퇴직금)"></td>
+                <td><input type="number" class="data-input" data-col="구연금저축"></td>
+                <td><input type="number" class="data-input" data-col="연금저축(세금)"></td>
+                <td><input type="number" class="data-input" data-col="연금저축(ISA)"></td>
+                <td><input type="number" class="data-input" data-col="일반계좌"></td>
+                <td><input type="number" class="data-input" data-col="KKB저금"></td>
+                <td><input type="number" class="data-input" data-col="금융원"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인)_H"></td>
+                <td><input type="number" class="data-input" data-col="ISA_H"></td>
+                <td><input type="number" class="data-input" data-col="일반_H"></td>
             </tr>
-            <tr data-ticker="474020">
+            <tr data-ticker="474020" data-row-key="1Q_SP500_MIX">
                 <td class="text-left">1Q 미국S&P500미국채혼합50액티브</td>
-                <td>0</td>
-                <td class="current-price" data-ticker-price>0</td>
-                <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                <td><input type="number" class="data-input" data-col="평가금액"></td>
+                <td class="current-price fixed-data" data-ticker-price>N/A</td>
+                <td><input type="number" class="data-input" data-col="IRP(퇴직금/개인)"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인+퇴직금)"></td>
+                <td><input type="number" class="data-input" data-col="구연금저축"></td>
+                <td><input type="number" class="data-input" data-col="연금저축(세금)"></td>
+                <td><input type="number" class="data-input" data-col="연금저축(ISA)"></td>
+                <td><input type="number" class="data-input" data-col="일반계좌"></td>
+                <td><input type="number" class="data-input" data-col="KKB저금"></td>
+                <td><input type="number" class="data-input" data-col="금융원"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인)_H"></td>
+                <td><input type="number" class="data-input" data-col="ISA_H"></td>
+                <td><input type="number" class="data-input" data-col="일반_H"></td>
             </tr>
-            <tr data-ticker="474010">
+            <tr data-ticker="474010" data-row-key="1Q_NASDAQ100_MIX">
                 <td class="text-left">1Q 미국나스닥100미국채혼합50액티브</td>
-                <td>0</td>
-                <td class="current-price" data-ticker-price>0</td>
-                <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                <td><input type="number" class="data-input" data-col="평가금액"></td>
+                <td class="current-price fixed-data" data-ticker-price>N/A</td>
+                <td><input type="number" class="data-input" data-col="IRP(퇴직금/개인)"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인+퇴직금)"></td>
+                <td><input type="number" class="data-input" data-col="구연금저축"></td>
+                <td><input type="number" class="data-input" data-col="연금저축(세금)"></td>
+                <td><input type="number" class="data-input" data-col="연금저축(ISA)"></td>
+                <td><input type="number" class="data-input" data-col="일반계좌"></td>
+                <td><input type="number" class="data-input" data-col="KKB저금"></td>
+                <td><input type="number" class="data-input" data-col="금융원"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인)_H"></td>
+                <td><input type="number" class="data-input" data-col="ISA_H"></td>
+                <td><input type="number" class="data-input" data-col="일반_H"></td>
             </tr>
-            <tr data-ticker="453860">
+            <tr data-ticker="453860" data-row-key="ACE_US30Y">
                 <td class="text-left">ACE 미국30년국채액티브(H)</td>
-                <td>0</td>
-                <td class="current-price" data-ticker-price>0</td>
-                <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                <td><input type="number" class="data-input" data-col="평가금액"></td>
+                <td class="current-price fixed-data" data-ticker-price>N/A</td>
+                <td><input type="number" class="data-input" data-col="IRP(퇴직금/개인)"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인+퇴직금)"></td>
+                <td><input type="number" class="data-input" data-col="구연금저축"></td>
+                <td><input type="number" class="data-input" data-col="연금저축(세금)"></td>
+                <td><input type="number" class="data-input" data-col="연금저축(ISA)"></td>
+                <td><input type="number" class="data-input" data-col="일반계좌"></td>
+                <td><input type="number" class="data-input" data-col="KKB저금"></td>
+                <td><input type="number" class="data-input" data-col="금융원"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인)_H"></td>
+                <td><input type="number" class="data-input" data-col="ISA_H"></td>
+                <td><input type="number" class="data-input" data-col="일반_H"></td>
             </tr>
-            <tr data-ticker="365730">
+            <tr data-ticker="365730" data-row-key="SAMSUNG_SP500">
                 <td class="text-left">삼성미국S&P500인덱스H</td>
-                <td>0</td>
-                <td class="current-price" data-ticker-price>0</td>
-                <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                <td><input type="number" class="data-input" data-col="평가금액"></td>
+                <td class="current-price fixed-data" data-ticker-price>N/A</td>
+                <td><input type="number" class="data-input" data-col="IRP(퇴직금/개인)"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인+퇴직금)"></td>
+                <td><input type="number" class="data-input" data-col="구연금저축"></td>
+                <td><input type="number" class="data-input" data-col="연금저축(세금)"></td>
+                <td><input type="number" class="data-input" data-col="연금저축(ISA)"></td>
+                <td><input type="number" class="data-input" data-col="일반계좌"></td>
+                <td><input type="number" class="data-input" data-col="KKB저금"></td>
+                <td><input type="number" class="data-input" data-col="금융원"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인)_H"></td>
+                <td><input type="number" class="data-input" data-col="ISA_H"></td>
+                <td><input type="number" class="data-input" data-col="일반_H"></td>
             </tr>
-            <tr data-ticker="423850">
+            <tr data-ticker="423850" data-row-key="ACE_GOLD">
                 <td class="text-left">ACE KRX금현물</td>
-                <td>0</td>
-                <td class="current-price" data-ticker-price>0</td>
-                <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr data-ticker="370500">
-                <td class="text-left">KODEX 200TR</td>
-                <td>0</td>
-                <td class="current-price" data-ticker-price>0</td>
-                <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr data-ticker="427500">
-                <td class="text-left">KODEX 200타겟위클리커버드콜</td>
-                <td>0</td>
-                <td class="current-price" data-ticker-price>0</td>
-                <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr data-ticker="175860">
-                <td class="text-left">KRX 금1g</td>
-                <td>0</td>
-                <td class="current-price" data-ticker-price>0</td>
-                <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr data-ticker="379530">
-                <td class="text-left">KODEX 머니마켓액티브</td>
-                <td>0</td>
-                <td class="current-price" data-ticker-price>0</td>
-                <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-                <td class="text-left">Vanguard S&P 500 ETF (VOO)</td>
-                <td>0</td>
-                <td class="current-price">470.50 USD</td> 
-                <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            
-            <tr>
-                <td class="text-left total-row">예수금</td>
-                <td class="total-row">1,234,567</td>
-                <td class="total-row">N/A</td> 
-                <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-            <tr>
-                <td class="text-left total-row">평가금액</td>
-                <td class="total-row">3,456,789</td>
-                <td class="total-row">N/A</td>
-                <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-            </tr>
-
-        </tbody>
-    </table>
-
-    <script>
-        // 🚨 배포 후, 이 주소를 Vercel 또는 Netlify에서 생성된 API 주소로 변경해야 합니다.
-        // 예: https://your-github-repo-name.vercel.app/api/prices
-        const API_ENDPOINT = 'YOUR_DEPLOYED_SERVERLESS_FUNCTION_URL/api/prices'; 
-
-        // 티커 목록을 추출하는 함수
-        function getTickerList() {
-            const tickerElements = document.querySelectorAll('tr[data-ticker]');
-            const tickers = [];
-            tickerElements.forEach(row => {
-                const ticker = row.getAttribute('data-ticker');
-                if (ticker) {
-                    tickers.push(ticker);
-                }
-            });
-            return tickers;
-        }
-
-        // 현재가를 가져와서 업데이트하는 함수
-        async function updateCurrentPrices() {
-            const tickers = getTickerList();
-            
-            // 배포 URL 설정 확인
-            if (tickers.length === 0 || API_ENDPOINT.includes('YOUR_DEPLOYED_SERVERLESS_FUNCTION_URL')) {
-                 console.error("API 엔드포인트 URL을 배포된 주소로 설정해주세요.");
-                 return;
-            }
-
-            console.log("실시간 현재가 업데이트 시작. 티커:", tickers);
-
-            try {
-                // Serverless Function에 종목 코드를 쿼리 파라미터로 전송
-                const response = await fetch(`${API_ENDPOINT}?tickers=${tickers.join(',')}`);
-
-                if (!response.ok) {
-                    throw new Error(`HTTP 오류: ${response.status}`);
-                }
-
-                const data = await response.json();
-                
-                // 받아온 데이터로 표 업데이트
-                for (const ticker in data) {
-                    const price = data[ticker];
-                    if (price) {
-                        // 숫자를 한국 형식(쉼표 포함)으로 변환
-                        const formattedPrice = price.toLocaleString('ko-KR', { minimumFractionDigits: 0 }); 
-                        
-                        const row = document.querySelector(`tr[data-ticker="${ticker}"]`);
-                        if (row) {
-                            const priceCell = row.querySelector('[data-ticker-price]');
-                            if (priceCell) {
-                                priceCell.textContent = formattedPrice;
-                                priceCell.style.color = 'green';
-                            }
-                        }
-                    }
-                }
-                
-                // 마지막 업데이트 시간 기록
-                document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString('ko-KR');
-                console.log("현재가 업데이트 완료.");
-
-            } catch (error) {
-                console.error("현재가 업데이트 실패:", error);
-                document.getElementById('lastUpdated').textContent = '업데이트 실패';
-            }
-        }
-
-        // 페이지 로드 시 현재가 업데이트 실행 및 30초마다 반복 (실시간 업데이트)
-        document.addEventListener('DOMContentLoaded', () => {
-            updateCurrentPrices();
-            setInterval(updateCurrentPrices, 30 * 1000); // 30초마다 업데이트
-        });
-    </script>
-</body>
-</html>
+                <td><input type="number" class="data-input" data-col="평가금액"></td>
+                <td class="current-price fixed-data" data-ticker-price>N/A</td>
+                <td><input type="number" class="data-input" data-col="IRP(퇴직금/개인)"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인)"></td>
+                <td><input type="number" class="data-input" data-col="IRP(개인+퇴직금)"></td>
+                <td><input type="number" class="data-input" data-col="구연금저축"></td>
+                <td><input type="number" class="data-input" data-col="연금저축(세금)"></td>
+                <td><input type="number" class="data-input" data-col="연금저축(ISA)"></td>
+                <td><input type="number" class="data-input" data-col="일반계좌"></td>
+                <td><input type="number" class="data-input" data-col="KKB저금"></td>
+                <td><input type="number"
