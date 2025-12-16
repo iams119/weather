@@ -102,10 +102,18 @@ select:hover, input[type=submit]:hover, button:hover { background: #dff4ff; }
 const API_KEY='66f62464dec4a29271b61021e3858e76';
 let currentLang='kr', forecastRaw=null;
 
-// ✨ 평문 비밀번호 대신, SHA-256 해시 값 저장
+// 🔑 보안 강화 설정 🔑
+// 1. Salt (고정된 솔트 값 - 16진수)
+// 클라이언트 측에서는 솔트가 노출되지만, 해시가 깨지는 것을 방지함
+const SALT_HEX = 'f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5'; 
 
-// SHA-256 해시 값 (소문자): c0a216447d25642d911b306b43d3b664d6a742878c7722956f1400e99b054a8e
-const CORRECT_HASH = 'c0a216447d25642d911b306b43d3b664d6a742878c7722956f1400e99b054a8e'; 
+// 2. Iterations (키 스트레칭 반복 횟수 - 100,000회)
+const ITERATIONS = 100000; 
+
+// 3. Expected Derived Key (파생된 키의 최종 해시 값)
+// 원본 비밀번호: '******'을 SALT와 ITERATIONS를 적용하여 미리 계산한 결과
+const CORRECT_DERIVED_KEY = '78d3882772714c1d2e2b349141f17e2e50c40e1182285e6b18991a0c4f80e72c'; 
+// 🔑 ------------------------ 🔑
 
 const cities=[
 // ... (도시 데이터 유지) ...
@@ -250,19 +258,50 @@ function showDetails(date){
 document.querySelector('.modal-close').addEventListener('click',()=>{ document.getElementById('detailModal').style.display='none'; });
 window.addEventListener('click',e=>{ if(e.target.id==='detailModal') e.target.style.display='none'; });
 
-// 🔑 새로운 해싱 로직 🔑
+// 🔑 PBKDF2 (솔트 & 키 스트레칭) 로직 🔑
 
-// ArrayBuffer를 16진수 문자열로 변환하는 헬퍼 함수
+// 16진수 문자열을 ArrayBuffer로 변환
+function hexToArrayBuffer(hexString) {
+    const bytes = new Uint8Array(Math.ceil(hexString.length / 2));
+    for (let i = 0; i < bytes.length; i++) {
+        bytes[i] = parseInt(hexString.substr(i * 2, 2), 16);
+    }
+    return bytes.buffer;
+}
+
+// ArrayBuffer를 16진수 문자열로 변환 (비교용)
 function bufferToHex(buffer) {
     return Array.prototype.map.call(new Uint8Array(buffer), x => (('00' + x.toString(16))).slice(-2)).join('');
 }
 
-// SHA-256 해시 함수 (비동기)
-async function sha256(str) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(str);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    return bufferToHex(hashBuffer);
+// PBKDF2를 사용하여 비밀번호에서 키를 파생하는 비동기 함수
+async function deriveKey(password, salt, iterations) {
+    const passwordBytes = new TextEncoder().encode(password);
+    const saltBuffer = hexToArrayBuffer(salt);
+
+    // 1. 비밀번호를 PBKDF2 마스터 키로 가져옵니다.
+    const key = await crypto.subtle.importKey(
+        'raw', 
+        passwordBytes, 
+        { name: 'PBKDF2' }, 
+        false, 
+        ['deriveBits']
+    );
+
+    // 2. 키 스트레칭(100,000회 반복)을 통해 파생 키를 생성합니다.
+    const derivedBits = await crypto.subtle.deriveBits(
+        {
+            name: 'PBKDF2',
+            salt: saltBuffer,
+            iterations: iterations,
+            hash: 'SHA-256', // 해시 알고리즘 설정
+        },
+        key,
+        256 // 256비트(32바이트) 키 길이
+    );
+    
+    // 파생된 ArrayBuffer를 16진수 문자열로 변환하여 반환
+    return bufferToHex(derivedBits);
 }
 
 const loginScreen = document.getElementById('loginScreen');
@@ -270,21 +309,30 @@ const passwordInput = document.getElementById('passwordInput');
 const loginButton = document.getElementById('loginButton');
 const loginError = document.getElementById('loginError');
 
-// 비동기 로그인 확인 함수로 변경
+// 비동기 로그인 확인 함수
 async function checkLogin(e) {
     if (e) e.preventDefault();
     const enteredPassword = passwordInput.value;
     
-    // 1. 입력된 비밀번호를 SHA-256으로 해시
-    const enteredHash = await sha256(enteredPassword);
-    
-    // 2. 해시 값을 미리 저장된 해시 값과 비교
-    if (enteredHash === CORRECT_HASH) {
+    // 1. 입력된 비밀번호로 파생 키를 생성 (솔트와 스트레칭 적용)
+    let enteredDerivedKey;
+    try {
+        enteredDerivedKey = await deriveKey(enteredPassword, SALT_HEX, ITERATIONS);
+    } catch(error) {
+        console.error("Key derivation failed:", error);
+        loginError.textContent = "인증 중 오류가 발생했습니다.";
+        loginError.style.display = 'block';
+        return;
+    }
+
+    // 2. 생성된 파생 키를 미리 저장된 키와 비교
+    if (enteredDerivedKey === CORRECT_DERIVED_KEY) {
         // 비밀번호 일치: 로그인 화면 숨기기
         loginScreen.style.display = 'none';
         loginError.style.display = 'none';
     } else {
         // 비밀번호 불일치: 에러 메시지 표시
+        loginError.textContent = "비밀번호가 틀렸습니다.";
         loginError.style.display = 'block';
         passwordInput.value = ''; // 입력 필드 초기화
         passwordInput.focus();
@@ -303,4 +351,3 @@ passwordInput.addEventListener('keypress', function(e) {
 </script>
 </body>
 </html>
-
