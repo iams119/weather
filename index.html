@@ -5,6 +5,7 @@
 <title>🌦 주요 도시 5일 날씨 예보</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <style>
+/* 기존 CSS 스타일 유지 */
 body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background: linear-gradient(to bottom, #e8f7ff, #f7fbff); transition: background 0.5s; }
 h1 { text-align: center; }
 .controls { text-align: center; margin-bottom: 10px; }
@@ -24,34 +25,86 @@ select:hover, input[type=submit]:hover, button:hover { background: #dff4ff; }
 .modal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
 .modal-content { background: white; border-radius: 10px; padding: 20px; max-width: 600px; width: 90%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
 .modal-close { float: right; cursor: pointer; font-weight: bold; font-size: 1.2rem; }
+
+/* 추가된 로그인 화면 스타일 */
+#loginScreen {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #f7fbff; /* 배경과 유사하게 설정 */
+    z-index: 1000; /* 모든 요소 위에 표시 */
+    flex-direction: column;
+    text-align: center;
+}
+#loginBox {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+#passwordInput {
+    padding: 10px;
+    margin: 15px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    width: 200px;
+    text-align: center;
+}
+#loginButton {
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+}
+#loginButton:hover {
+    background-color: #357abd;
+}
 </style>
 </head>
 <body>
+
+<div id="loginScreen">
+    <div id="loginBox">
+        <h2>🔒 비밀번호를 입력해주세요</h2>
+        <p>초기 비밀번호: 090591</p>
+        <input type="password" id="passwordInput" placeholder="비밀번호" />
+        <button id="loginButton">로그인</button>
+        <p id="loginError" style="color: red; margin-top: 10px; display: none;">비밀번호가 틀렸습니다.</p>
+    </div>
+</div>
 <h1 id="title">🌦 주요 도시 5일 날씨 예보</h1>
 <div class="controls">
-  <form id="weatherForm" style="display:inline;">
-    <select id="citySelect" required>
-      <option value="">도시 선택</option>
-    </select>
-    <input type="submit" value="검색" />
-  </form>
-  <button id="langToggle">English</button>
+    <form id="weatherForm" style="display:inline;">
+        <select id="citySelect" required>
+            <option value="">도시 선택</option>
+        </select>
+        <input type="submit" value="검색" />
+    </form>
+    <button id="langToggle">English</button>
 </div>
 <div id="loading" style="display:none;">⏳ 데이터를 불러오는 중...</div>
 <div id="forecastResult" class="forecast"></div>
 <div id="map"></div>
 
 <div id="detailModal" class="modal">
-  <div class="modal-content">
-    <span class="modal-close">&times;</span>
-    <div id="modalBody"></div>
-  </div>
+    <div class="modal-content">
+        <span class="modal-close">&times;</span>
+        <div id="modalBody"></div>
+    </div>
 </div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 const API_KEY='66f62464dec4a29271b61021e3858e76';
 let currentLang='kr', forecastRaw=null;
+
+// ✨ 초기 비밀번호 설정
+const correctPassword = '090591'; 
 
 const cities=[
 {id:1835848,name:"Seoul",name_kr:"서울",lat:37.5665,lon:126.9780},
@@ -76,13 +129,13 @@ const cities=[
 
 const citySelect=document.getElementById('citySelect');
 function fillCitySelect(){
-  citySelect.innerHTML=`<option value="">${currentLang==='kr'?'도시 선택':'Select City'}</option>`;
-  cities.forEach(c=>{
-    const opt=document.createElement('option');
-    opt.value=c.id;
-    opt.textContent=currentLang==='kr'?c.name_kr:c.name;
-    citySelect.appendChild(opt);
-  });
+    citySelect.innerHTML=`<option value="">${currentLang==='kr'?'도시 선택':'Select City'}</option>`;
+    cities.forEach(c=>{
+        const opt=document.createElement('option');
+        opt.value=c.id;
+        opt.textContent=currentLang==='kr'?c.name_kr:c.name;
+        citySelect.appendChild(opt);
+    });
 }
 fillCitySelect();
 
@@ -90,112 +143,148 @@ const map=L.map('map').setView([20,0],2);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ maxZoom:18 }).addTo(map);
 const markers=[];
 cities.forEach((city,i)=>{
-  const marker=L.marker([city.lat,city.lon]).addTo(map);
-  marker.bindTooltip(currentLang==='kr'?city.name_kr:city.name);
-  marker.on('click',()=>fetchForecast(city.id));
-  markers.push(marker);
+    const marker=L.marker([city.lat,city.lon]).addTo(map);
+    marker.bindTooltip(currentLang==='kr'?city.name_kr:city.name);
+    marker.on('click',()=>fetchForecast(city.id));
+    markers.push(marker);
 });
 
 document.getElementById('weatherForm').addEventListener('submit',e=>{
-  e.preventDefault();
-  fetchForecast(citySelect.value);
+    e.preventDefault();
+    fetchForecast(citySelect.value);
 });
 
 document.getElementById('langToggle').addEventListener('click',()=>{
-  currentLang=currentLang==='kr'?'en':'kr';
-  document.getElementById('title').textContent=currentLang==='kr'?'🌦 주요 도시 5일 날씨 예보':'🌦 Major City 5-Day Weather Forecast';
-  fillCitySelect();
-  markers.forEach((m,i)=>m.bindTooltip(currentLang==='kr'?cities[i].name_kr:cities[i].name));
+    currentLang=currentLang==='kr'?'en':'kr';
+    document.getElementById('title').textContent=currentLang==='kr'?'🌦 주요 도시 5일 날씨 예보':'🌦 Major City 5-Day Weather Forecast';
+    fillCitySelect();
+    markers.forEach((m,i)=>m.bindTooltip(currentLang==='kr'?cities[i].name_kr:cities[i].name));
 });
 
 function fetchForecast(cityId){
-  if(!cityId) return alert(currentLang==='kr'?'도시를 선택해주세요!':'Please select a city!');
-  const loading=document.getElementById('loading');
-  loading.style.display='block';
-  fetch(`https://api.openweathermap.org/data/2.5/forecast?id=${cityId}&appid=${API_KEY}&units=metric&lang=${currentLang}`)
-    .then(res=>res.json())
-    .then(data=>{
-      loading.style.display='none';
-      if(data.cod==='200'){
-        forecastRaw=data;
-        showForecast(data);
-        map.setView([data.city.coord.lat,data.city.coord.lon],7);
-      }else{
-        document.getElementById('forecastResult').innerHTML=`<p class="error">${currentLang==='kr'?'도시 정보를 찾을 수 없습니다.':'City data not found.'}</p>`;
-      }
-    })
-    .catch(()=>{
-      loading.style.display='none';
-      document.getElementById('forecastResult').innerHTML=`<p class="error">${currentLang==='kr'?'오류가 발생했습니다.':'An error occurred.'}</p>`;
-    });
+    if(!cityId) return alert(currentLang==='kr'?'도시를 선택해주세요!':'Please select a city!');
+    const loading=document.getElementById('loading');
+    loading.style.display='block';
+    fetch(`https://api.openweathermap.org/data/2.5/forecast?id=${cityId}&appid=${API_KEY}&units=metric&lang=${currentLang}`)
+        .then(res=>res.json())
+        .then(data=>{
+            loading.style.display='none';
+            if(data.cod==='200'){
+                forecastRaw=data;
+                showForecast(data);
+                map.setView([data.city.coord.lat,data.city.coord.lon],7);
+            }else{
+                document.getElementById('forecastResult').innerHTML=`<p class="error">${currentLang==='kr'?'도시 정보를 찾을 수 없습니다.':'City data not found.'}</p>`;
+            }
+        })
+        .catch(()=>{
+            loading.style.display='none';
+            document.getElementById('forecastResult').innerHTML=`<p class="error">${currentLang==='kr'?'오류가 발생했습니다.':'An error occurred.'}</p>`;
+        });
 }
 
 function mostFrequent(arr){ const count={}; arr.forEach(v=>count[v]=(count[v]||0)+1); return Object.keys(count).reduce((a,b)=>count[a]>count[b]?a:b); }
 
 function showForecast(data){
-  const daily={};
-  data.list.forEach(item=>{
-    const date=item.dt_txt.split(' ')[0];
-    if(!daily[date]) daily[date]={ temps:[], feels:[], humid:[], wind:[], press:[], desc:[], icon:[], details:[] };
-    daily[date].temps.push(item.main.temp);
-    daily[date].feels.push(item.main.feels_like);
-    daily[date].humid.push(item.main.humidity);
-    daily[date].wind.push(item.wind.speed);
-    daily[date].press.push(item.main.pressure);
-    daily[date].desc.push(item.weather[0].description);
-    daily[date].icon.push(item.weather[0].icon);
-    daily[date].details.push(item);
-  });
+    const daily={};
+    data.list.forEach(item=>{
+        const date=item.dt_txt.split(' ')[0];
+        if(!daily[date]) daily[date]={ temps:[], feels:[], humid:[], wind:[], press:[], desc:[], icon:[], details:[] };
+        daily[date].temps.push(item.main.temp);
+        daily[date].feels.push(item.main.feels_like);
+        daily[date].humid.push(item.main.humidity);
+        daily[date].wind.push(item.wind.speed);
+        daily[date].press.push(item.main.pressure);
+        daily[date].desc.push(item.weather[0].description);
+        daily[date].icon.push(item.weather[0].icon);
+        daily[date].details.push(item);
+    });
 
-  const days=Object.keys(daily).slice(0,5);
-  let html='';
-  days.forEach(date=>{
-    const d=daily[date];
-    const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
-    const maxT=Math.max(...d.temps).toFixed(1);
-    const minT=Math.min(...d.temps).toFixed(1);
-    const avgF=avg(d.feels).toFixed(1);
-    const avgH=avg(d.humid).toFixed(0);
-    const avgW=avg(d.wind).toFixed(1);
-    const avgP=avg(d.press).toFixed(0);
-    const desc=mostFrequent(d.desc);
-    const icon=mostFrequent(d.icon);
-    const dateObj=new Date(date);
-    const dayNames=currentLang==='kr'?['일','월','화','수','목','금','토']:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    const dateStr=`${dateObj.getMonth()+1}/${dateObj.getDate()} (${dayNames[dateObj.getDay()]})`;
+    const days=Object.keys(daily).slice(0,5);
+    let html='';
+    days.forEach(date=>{
+        const d=daily[date];
+        const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
+        const maxT=Math.max(...d.temps).toFixed(1);
+        const minT=Math.min(...d.temps).toFixed(1);
+        const avgF=avg(d.feels).toFixed(1);
+        const avgH=avg(d.humid).toFixed(0);
+        const avgW=avg(d.wind).toFixed(1);
+        const avgP=avg(d.press).toFixed(0);
+        const desc=mostFrequent(d.desc);
+        const icon=mostFrequent(d.icon);
+        const dateObj=new Date(date);
+        const dayNames=currentLang==='kr'?['일','월','화','수','목','금','토']:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        const dateStr=`${dateObj.getMonth()+1}/${dateObj.getDate()} (${dayNames[dateObj.getDay()]})`;
 
-  html += `<div class="day" onclick="showDetails('${date}')">
-  <h3>${dateStr}</h3>
-  <img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="${desc}"><br>
-  <strong>${minT}° / ${maxT}°C</strong>
-  <p>${desc}</p>
-  <p class="humidity">${currentLang==='kr'?'체감':'Feels'}: ${avgF} ℃</p>
-  <p class="wind">${currentLang==='kr'?'풍속':'Wind'}: ${avgW} m/s</p>
-  <p class="pressure">${currentLang==='kr'?'기압':'Pressure'}: ${avgP} hPa</p>
-  <p>${currentLang==='kr'?'습도':'Humidity'}: ${avgH}%</p>
-</div>`;
-  
-  });
-  document.getElementById('forecastResult').innerHTML=html;
+        html += `<div class="day" onclick="showDetails('${date}')">
+            <h3>${dateStr}</h3>
+            <img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="${desc}"><br>
+            <strong>${minT}° / ${maxT}°C</strong>
+            <p>${desc}</p>
+            <p class="humidity">${currentLang==='kr'?'체감':'Feels'}: ${avgF} ℃</p>
+            <p class="wind">${currentLang==='kr'?'풍속':'Wind'}: ${avgW} m/s</p>
+            <p class="pressure">${currentLang==='kr'?'기압':'Pressure'}: ${avgP} hPa</p>
+            <p>${currentLang==='kr'?'습도':'Humidity'}: ${avgH}%</p>
+        </div>`;
+        
+    });
+    document.getElementById('forecastResult').innerHTML=html;
 }
 
 function showDetails(date){
-  const modal=document.getElementById('detailModal'), body=document.getElementById('modalBody');
-  const dayData=forecastRaw.list.filter(i=>i.dt_txt.startsWith(date));
-  let html=`<h2>${date}</h2><table style="width:100%;text-align:center;"><tr><th>${currentLang==='kr'?'시간':'Time'}</th><th>${currentLang==='kr'?'기온':'Temp'}</th><th>${currentLang==='kr'?'체감':'Feels'}</th><th>${currentLang==='kr'?'습도':'Humidity'}</th><th>${currentLang==='kr'?'풍속':'Wind'}</th><th>${currentLang==='kr'?'기압':'Pressure'}</th></tr>`;
-  dayData.forEach(item=>{
-    const t=item.dt_txt.split(' ')[1].slice(0,5);
-    html+=`<tr><td>${t}</td><td>${item.main.temp}°C</td><td>${item.main.feels_like}°C</td><td>${item.main.humidity}%</td><td>${item.wind.speed} m/s</td><td>${item.main.pressure} hPa</td></tr>`;
-  });
-  html+='</table>';
-  body.innerHTML=html;
-  modal.style.display='flex';
+    const modal=document.getElementById('detailModal'), body=document.getElementById('modalBody');
+    const dayData=forecastRaw.list.filter(i=>i.dt_txt.startsWith(date));
+    let html=`<h2>${date}</h2><table style="width:100%;text-align:center;"><tr><th>${currentLang==='kr'?'시간':'Time'}</th><th>${currentLang==='kr'?'기온':'Temp'}</th><th>${currentLang==='kr'?'체감':'Feels'}</th><th>${currentLang==='kr'?'습도':'Humidity'}</th><th>${currentLang==='kr'?'풍속':'Wind'}</th><th>${currentLang==='kr'?'기압':'Pressure'}</th></tr>`;
+    dayData.forEach(item=>{
+        const t=item.dt_txt.split(' ')[1].slice(0,5);
+        html+=`<tr><td>${t}</td><td>${item.main.temp}°C</td><td>${item.main.feels_like}°C</td><td>${item.main.humidity}%</td><td>${item.wind.speed} m/s</td><td>${item.main.pressure} hPa</td></tr>`;
+    });
+    html+='</table>';
+    body.innerHTML=html;
+    modal.style.display='flex';
 }
 
 document.querySelector('.modal-close').addEventListener('click',()=>{ document.getElementById('detailModal').style.display='none'; });
 window.addEventListener('click',e=>{ if(e.target.id==='detailModal') e.target.style.display='none'; });
+
+// 🔑 로그인 로직 추가 🔑
+const loginScreen = document.getElementById('loginScreen');
+const passwordInput = document.getElementById('passwordInput');
+const loginButton = document.getElementById('loginButton');
+const loginError = document.getElementById('loginError');
+
+function checkLogin(e) {
+    if (e) e.preventDefault();
+    const enteredPassword = passwordInput.value;
+    
+    if (enteredPassword === correctPassword) {
+        // 비밀번호 일치: 로그인 화면 숨기기
+        loginScreen.style.display = 'none';
+        loginError.style.display = 'none';
+        // 로그인 성공 후, 지도와 날씨 기능이 정상적으로 보이도록 함 (선택 사항)
+        // 지도를 새로고침하여 타일이 제대로 로드되게 할 수 있습니다. (선택 사항)
+        // map.invalidateSize();
+    } else {
+        // 비밀번호 불일치: 에러 메시지 표시
+        loginError.style.display = 'block';
+        passwordInput.value = ''; // 입력 필드 초기화
+        passwordInput.focus();
+    }
+}
+
+// 버튼 클릭 이벤트 리스너
+loginButton.addEventListener('click', checkLogin);
+
+// Enter 키 입력 이벤트 리스너
+passwordInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        checkLogin(e);
+    }
+});
+
+// 페이지 로드 시 로그인 화면이 항상 표시되도록 설정 (HTML에서 기본으로 'flex'를 가짐)
+// 초기 비밀번호가 이미 설정되었으므로 이 부분은 생략합니다.
 </script>
 </body>
 </html>
-
-
